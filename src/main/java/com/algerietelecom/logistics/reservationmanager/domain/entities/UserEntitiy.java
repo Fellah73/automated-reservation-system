@@ -1,13 +1,22 @@
 package com.algerietelecom.logistics.reservationmanager.domain.entities;
-import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Role;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "users")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserEntitiy {
@@ -26,9 +35,6 @@ public class UserEntitiy {
     @Email(message = "Email should be valid")
     private String email;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    private String role;
 
 }
-
-
