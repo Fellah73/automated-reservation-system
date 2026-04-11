@@ -61,7 +61,7 @@ public class AuthController {
     }
 
     // me route
-    @GetMapping(path ="/me")
+    @GetMapping(path = "/me")
     public ResponseEntity<?> getMe(HttpServletRequest request) {
         String email = (String) request.getAttribute("userEmail");
         try {
@@ -91,6 +91,33 @@ public class AuthController {
         }
     }
 
+    // logout route
+    @PostMapping(path = "/logout")
+    public ResponseEntity<ApiResponse<String>> logout(HttpServletResponse response) {
+        try {
+            Cookie cookie = new Cookie("authToken", null);
+            cookie.setHttpOnly(true);
+            cookie.setSecure(false);
+            cookie.setPath("/");
+            cookie.setMaxAge(0);
+
+            response.addCookie(cookie);
+
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .success(true)
+                    .message("Déconnexion réussie")
+                    .statusCode(200)
+                    .data(null)
+                    .build());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(500).body(ApiResponse.<String>builder()
+                    .success(false)
+                    .message("Erreur lors de la déconnexion : " + e.getMessage())
+                    .statusCode(500)
+                    .data(null)
+                    .build());
+        }
+    }
 }
 
 record AuthResponse(String token) {

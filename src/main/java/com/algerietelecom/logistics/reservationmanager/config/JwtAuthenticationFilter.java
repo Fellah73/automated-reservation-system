@@ -23,6 +23,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
 
+    // exclude many routes from the filter (aka the guard)
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        return path.equals("/auth/login");
+    }
+
     // guard jwt method
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -54,6 +61,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 writeErrorResponse(response, "Auth error : " + e.getMessage(), 401);
                 return;
             }
+        } else {
+            writeErrorResponse(response, "No auth token provided", 401);
+            return;
         }
 
         filterChain.doFilter(request, response);
