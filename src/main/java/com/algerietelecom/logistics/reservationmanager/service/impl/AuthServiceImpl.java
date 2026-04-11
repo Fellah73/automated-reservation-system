@@ -18,6 +18,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    // login method
     @Override
     public String login(UserEntitiy userEntity) {
         UserEntitiy userRecord = userRepository.findAllByEmail(userEntity.getEmail());
@@ -30,5 +31,18 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return jwtService.generateToken(userRecord.getUsername(), userRecord.getEmail());
+    }
+
+    // me method
+    @Override
+    public UserEntitiy getMyInfo(String email) {
+        UserEntitiy user = userRepository.findAllByEmail(email);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        user.setPassword(null);
+        return user;
     }
 }

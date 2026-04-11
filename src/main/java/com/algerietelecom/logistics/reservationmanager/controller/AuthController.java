@@ -1,6 +1,7 @@
 package com.algerietelecom.logistics.reservationmanager.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +14,7 @@ import com.algerietelecom.logistics.reservationmanager.mappers.AuthMapper;
 import com.algerietelecom.logistics.reservationmanager.service.AuthService;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 
@@ -24,6 +26,7 @@ public class AuthController {
     private final AuthService authService;
     private final AuthMapper authMapper;
 
+    // login route
     @PostMapping(path = "/login")
     public ResponseEntity<ApiResponse<String>> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {
         try {
@@ -56,6 +59,38 @@ public class AuthController {
                     .build());
         }
     }
+
+    // me route
+    @GetMapping(path ="/me")
+    public ResponseEntity<?> getMe(HttpServletRequest request) {
+        String email = (String) request.getAttribute("userEmail");
+        try {
+            if (email == null) {
+                return ResponseEntity.status(401).body(ApiResponse.<String>builder()
+                        .success(false)
+                        .message("Unauthorized")
+                        .statusCode(401)
+                        .build());
+            }
+
+            UserEntitiy user = authService.getMyInfo(email);
+
+            return ResponseEntity.status(200).body(ApiResponse.<UserEntitiy>builder()
+                    .success(true)
+                    .message("User found")
+                    .statusCode(200)
+                    .data(user)
+                    .build());
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(ApiResponse.<String>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(404)
+                    .build());
+        }
+    }
+
 }
 
 record AuthResponse(String token) {
