@@ -16,6 +16,7 @@ public class ReservationRequestResponseDTO {
     private String status;
     private List<ParticipantResponseDTO> participants;
     private PreferenceResponseDTO preferences;
+    private List<ReservationAttachmentDTO> attachments;
 
     @Data
     public static class ParticipantResponseDTO {
@@ -35,4 +36,9 @@ public class ReservationRequestResponseDTO {
         private String mealPreference;
         private String transportType;
     }
+
+    public void setAttachments(List<ReservationAttachmentDTO> attachments) {
+        this.attachments = attachments;
+    }
+   
 }

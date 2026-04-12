@@ -91,9 +91,9 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
         List<ReservationRequest> reservationRequests = reservationRequestRepository
                 .findByCreatedByOrderByCreatedAtDesc(currentUser);
 
-        if (reservationRequests.isEmpty()) {
-            throw new RuntimeException("No reservation requests found");
-        }
+        //if (reservationRequests.isEmpty()) {
+        //    throw new RuntimeException("No reservation requests found");
+        //}
 
         // convert to overview DTOs
         List<ReservationRequestOverviewDTO> overviewReservationRequestesDTOs = reservationRequests.stream()
@@ -132,6 +132,8 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
             throw new RuntimeException("Reservation request not found");
         }
 
-        return reservationMapper.toResponseDTO(reservationRequest);
+        List<ReservationAttachment> requestAttachments = attachmentRepository.findByReservationRequest(reservationRequest);
+
+        return reservationMapper.toResponseDTO(reservationRequest, requestAttachments);
     }
 }

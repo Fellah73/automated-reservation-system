@@ -10,6 +10,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.entities.reservati
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationParticipant;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -55,7 +56,8 @@ public class ReservationRequestMapper {
         return entity;
     }
 
-    public ReservationRequestResponseDTO toResponseDTO(ReservationRequest entity) {
+    public ReservationRequestResponseDTO toResponseDTO(ReservationRequest entity,
+            List<ReservationAttachment> requestAttachments) {
         if (entity == null)
             return null;
 
@@ -90,6 +92,16 @@ public class ReservationRequestMapper {
             prefDto.setMealPreference(entity.getPreferences().getMealPreference());
             prefDto.setTransportType(entity.getPreferences().getTransportType());
             dto.setPreferences(prefDto);
+        }
+
+        if (requestAttachments != null) {
+            dto.setAttachments((List) requestAttachments.stream().map(att -> {
+                ReservationAttachmentDTO attDto = new ReservationAttachmentDTO();
+                attDto.setFileName(att.getFileName());
+                attDto.setFileType(att.getFileType());
+                attDto.setFilePath(att.getFilePath());
+                return attDto;
+            }).collect(Collectors.toList()));
         }
 
         return dto;

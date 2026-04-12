@@ -48,7 +48,7 @@ public class ReservationRequestController {
             ReservationRequest created = reservationService.createRequest(requestEntity, currentUser);
 
             // convert created entity to response DTO
-            ReservationRequestResponseDTO responseDTO = reservationMapper.toResponseDTO(created);
+            ReservationRequestResponseDTO responseDTO = reservationMapper.toResponseDTO(created, null);
 
             return ResponseEntity.status(201).body(ApiResponse.<ReservationRequestResponseDTO>builder()
                     .success(true)
