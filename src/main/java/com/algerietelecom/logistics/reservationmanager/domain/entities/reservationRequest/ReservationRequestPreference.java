@@ -1,5 +1,7 @@
 package com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,6 +20,7 @@ public class ReservationRequestPreference {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_request_id", nullable = false)
+    @JsonBackReference
     private ReservationRequest reservationRequest;
 
     @Column(columnDefinition = "TEXT")
@@ -30,4 +33,8 @@ public class ReservationRequestPreference {
     private String mealPreference;
 
     private String transportType;
+
+    public void setRequest(ReservationRequest reservationRequest) {
+        this.reservationRequest = reservationRequest;
+    }
 }

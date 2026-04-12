@@ -1,5 +1,6 @@
 package com.algerietelecom.logistics.reservationmanager.config;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -7,9 +8,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.repositories.AuthRepository;
 import com.algerietelecom.logistics.reservationmanager.service.JwtService;
 
-import java.io.IOException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -22,15 +24,14 @@ import lombok.RequiredArgsConstructor;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final AuthRepository userRepository; 
 
-    // exclude many routes from the filter (aka the guard)
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getServletPath();
         return path.equals("/auth/login");
     }
 
-    // guard jwt method
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -48,10 +49,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 if (jwtService.isTokenValid(token)) {
                     String email = jwtService.extractEmail(token);
+
+                    UserEntitiy currentUser = userRepository.findAll().stream()
+                            .filter(u -> "admin".equals(u.getUsername()))
+                            .findFirst()
+                            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'email : " + email));
+
                     request.setAttribute("userEmail", email);
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            email, null, new ArrayList<>());
+                            currentUser,
+                            null,
+                            new ArrayList<>());
+
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
                     writeErrorResponse(response, "expired jwt", 401);
@@ -69,7 +79,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // customized error response method
     private void writeErrorResponse(HttpServletResponse response, String message, int statusCode) throws IOException {
         response.setStatus(statusCode);
         response.setContentType("application/json");

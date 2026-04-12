@@ -1,5 +1,6 @@
 package com.algerietelecom.logistics.reservationmanager.controller;
 
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.ApiResponse;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestCreateDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
@@ -25,15 +26,28 @@ public class ReservationRequestController {
 
     // request reservation creation
     @PostMapping(path = "/create")
-    public ResponseEntity<ReservationRequest> createReservation(
+    public ResponseEntity<ApiResponse<ReservationRequest>> createReservation(
             @RequestBody ReservationRequestCreateDTO createDTO,
             @AuthenticationPrincipal UserEntitiy currentUser) {
 
-        ReservationRequest requestEntity = reservationMapper.toEntity(createDTO);
+        try {
+            ReservationRequest requestEntity = reservationMapper.toEntity(createDTO);
 
-        ReservationRequest created = reservationService.createRequest(requestEntity, currentUser);
+            ReservationRequest created = reservationService.createRequest(requestEntity, currentUser);
 
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
+            return ResponseEntity.status(201).body(ApiResponse.<ReservationRequest>builder()
+                    .success(true)
+                    .message("reservation request created successfully")
+                    .statusCode(201)
+                    .data(created)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<ReservationRequest>builder()
+                    .success(false)
+                    .message("Failed to create reservation request")
+                    .statusCode(500)
+                    .build());
+        }
     }
 
     // add attachment to reservation request // later

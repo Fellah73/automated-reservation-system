@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -73,6 +74,7 @@ public class ReservationRequest {
     // relations
     @Builder.Default 
     @OneToMany(mappedBy = "reservationRequest", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<ReservationParticipant> participants = new ArrayList<>();
 
     public void setParticipants(List<ReservationParticipant> participants) {
@@ -83,6 +85,7 @@ public class ReservationRequest {
     }
 
     @OneToOne(mappedBy = "reservationRequest", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private ReservationRequestPreference preferences;
     public void setPreferences(ReservationRequestPreference preferences) {
         this.preferences = preferences;

@@ -51,7 +51,6 @@ public class AuthController {
             return ResponseEntity.ok(apiResponse);
 
         } catch (RuntimeException e) {
-            //
             return ResponseEntity.status(401).body(ApiResponse.<String>builder()
                     .success(false)
                     .message(e.getMessage())
