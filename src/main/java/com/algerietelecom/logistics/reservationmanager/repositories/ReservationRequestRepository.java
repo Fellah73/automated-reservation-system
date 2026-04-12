@@ -1,16 +1,16 @@
 package com.algerietelecom.logistics.reservationmanager.repositories;
 
-import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
-import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
+import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
 
 @Repository
 public interface ReservationRequestRepository extends JpaRepository<ReservationRequest, Long> {
@@ -30,4 +30,7 @@ public interface ReservationRequestRepository extends JpaRepository<ReservationR
     Optional<ReservationRequest> findByIdWithDetails(@Param("id") Long id);
 
     boolean existsByRequestNumber(String requestNumber);
+
+    long countByStatus(ReservationStatus status);
+
 }

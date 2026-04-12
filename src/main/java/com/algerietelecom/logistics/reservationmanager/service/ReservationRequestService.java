@@ -1,9 +1,12 @@
 package com.algerietelecom.logistics.reservationmanager.service;
 
 import java.util.List;
-import org.springframework.web.multipart.MultipartFile;
 
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentBatchDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestOverviewDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestResponseDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestsStatsDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 
@@ -11,10 +14,12 @@ public interface ReservationRequestService {
 
     ReservationRequest createRequest(ReservationRequest request, UserEntitiy currentUser);
 
-    ReservationAttachmentDTO saveAttachment(
-            Long id, MultipartFile file, String category, UserEntitiy currentUser);
+    List<ReservationAttachmentDTO> saveAttachment(
+            String requestNumber, ReservationAttachmentBatchDTO attachmentBatchDTO, UserEntitiy currentUser);
 
-    List<ReservationRequest> getMyRequests(UserEntitiy currentUser);
+    List<ReservationRequestOverviewDTO> getMyRequests(UserEntitiy currentUser);
 
-    ReservationRequest getRequestById(Long id);
+    ReservationRequestResponseDTO getRequestById(String id);
+
+    ReservationRequestsStatsDTO getRequestStats();
 }

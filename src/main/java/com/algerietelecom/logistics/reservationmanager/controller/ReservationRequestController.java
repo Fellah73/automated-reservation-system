@@ -1,20 +1,30 @@
 package com.algerietelecom.logistics.reservationmanager.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.ApiResponse;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentBatchDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestCreateDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestOverviewApiResponse;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestOverviewDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestResponseDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestsStatsDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 import com.algerietelecom.logistics.reservationmanager.mappers.ReservationRequestMapper;
 import com.algerietelecom.logistics.reservationmanager.service.ReservationRequestService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/reservations")
@@ -26,23 +36,28 @@ public class ReservationRequestController {
 
     // request reservation creation
     @PostMapping(path = "/create")
-    public ResponseEntity<ApiResponse<ReservationRequest>> createReservation(
+    public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> createReservation(
             @RequestBody ReservationRequestCreateDTO createDTO,
             @AuthenticationPrincipal UserEntitiy currentUser) {
 
         try {
+            // convert DTO to entity
             ReservationRequest requestEntity = reservationMapper.toEntity(createDTO);
 
+            // create reservation request
             ReservationRequest created = reservationService.createRequest(requestEntity, currentUser);
 
-            return ResponseEntity.status(201).body(ApiResponse.<ReservationRequest>builder()
+            // convert created entity to response DTO
+            ReservationRequestResponseDTO responseDTO = reservationMapper.toResponseDTO(created);
+
+            return ResponseEntity.status(201).body(ApiResponse.<ReservationRequestResponseDTO>builder()
                     .success(true)
                     .message("reservation request created successfully")
                     .statusCode(201)
-                    .data(created)
+                    .data(responseDTO)
                     .build());
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(ApiResponse.<ReservationRequest>builder()
+            return ResponseEntity.status(500).body(ApiResponse.<ReservationRequestResponseDTO>builder()
                     .success(false)
                     .message("Failed to create reservation request")
                     .statusCode(500)
@@ -50,31 +65,92 @@ public class ReservationRequestController {
         }
     }
 
-    // add attachment to reservation request // later
+    // add attachment to reservation request
     @PostMapping(path = "/{id}/attachments")
-    public ResponseEntity<ReservationAttachmentDTO> addAttachment(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "category", defaultValue = "OTHER") String category,
+    public ResponseEntity<ApiResponse<List<ReservationAttachmentDTO>>> addAttachment(
+            @PathVariable String id,
+            @RequestBody ReservationAttachmentBatchDTO attachmentBatchDTO,
             @AuthenticationPrincipal UserEntitiy currentUser) {
 
-        ReservationAttachmentDTO savedAttachment = reservationService.saveAttachment(id, file, category, currentUser);
-        return new ResponseEntity<>(savedAttachment, HttpStatus.CREATED);
+        try {
+            List<ReservationAttachmentDTO> savedRequestAttachments = reservationService.saveAttachment(id,
+                    attachmentBatchDTO,
+                    currentUser);
+
+            return ResponseEntity.ok(ApiResponse.<List<ReservationAttachmentDTO>>builder()
+                    .success(true)
+                    .message("Attachments added successfully")
+                    .statusCode(200)
+                    .data(savedRequestAttachments)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<List<ReservationAttachmentDTO>>builder()
+                    .success(false)
+                    .message("Failed to add attachments: " + e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
     }
 
-    // get all my reservations (for user) // later
+    // get all user reservations
     @GetMapping(path = "/my")
-    public ResponseEntity<List<ReservationRequest>> getMyReservations(
+    public ResponseEntity<ApiResponse<ReservationRequestOverviewApiResponse>> getMyReservations(
             @AuthenticationPrincipal UserEntitiy currentUser) {
 
-        List<ReservationRequest> requests = reservationService.getMyRequests(currentUser);
-        return ResponseEntity.ok(requests);
+        try {
+            // get my reservation requests
+            List<ReservationRequestOverviewDTO> reservationRequests = reservationService.getMyRequests(currentUser);
+
+            // get their stats
+            ReservationRequestsStatsDTO stats = reservationService.getRequestStats();
+
+            ReservationRequestOverviewApiResponse response = new ReservationRequestOverviewApiResponse();
+            response.setReservationRequests(reservationRequests);
+            response.setStats(stats);
+
+            return ResponseEntity.ok(ApiResponse.<ReservationRequestOverviewApiResponse>builder()
+                    .success(true)
+                    .message("My reservations retrieved successfully")
+                    .statusCode(200)
+                    .data(response)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<ReservationRequestOverviewApiResponse>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
     }
 
-    // get reservation by id // later
+    // get reservation by id
     @GetMapping(path = "/{id}")
-    public ResponseEntity<ReservationRequest> getReservationById(@PathVariable Long id) {
-        ReservationRequest request = reservationService.getRequestById(id);
-        return ResponseEntity.ok(request);
+    public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> getReservationById(@PathVariable String id) {
+        try {
+            if (id == null || id.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.<ReservationRequestResponseDTO>builder()
+                        .success(false)
+                        .message("Invalid reservation request ID")
+                        .statusCode(400)
+                        .build());
+            }
+
+            // get reservation request
+            ReservationRequestResponseDTO request = reservationService.getRequestById(id);
+
+            return ResponseEntity.ok(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(true)
+                    .message("Reservation request retrieved successfully")
+                    .statusCode(200)
+                    .data(request)
+                    .build());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
     }
 }
