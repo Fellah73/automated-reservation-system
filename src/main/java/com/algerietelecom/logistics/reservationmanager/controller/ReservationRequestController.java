@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,8 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.ApiResponse;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.AdminCommentDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.AdminModificationRequestDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentBatchDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationHistoryResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestCreateDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestOverviewApiResponse;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestOverviewDTO;
@@ -34,6 +38,7 @@ public class ReservationRequestController {
     private final ReservationRequestService reservationService;
     private final ReservationRequestMapper reservationMapper;
 
+    // user routes
     // request reservation creation
     @PostMapping(path = "/create")
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> createReservation(
@@ -147,6 +152,122 @@ public class ReservationRequestController {
 
         } catch (Exception e) {
             return ResponseEntity.status(500).body(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
+    }
+
+    // admin routes
+    // approve reservation request
+    @PatchMapping(path = "/{id}/approve")
+    public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> approveRequest(@PathVariable String id,
+            @RequestBody AdminCommentDTO adminCommentDTO,
+            @AuthenticationPrincipal UserEntitiy currentUser) {
+        try {
+            if (id == null || id.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.<ReservationRequestResponseDTO>builder()
+                        .success(false)
+                        .message("Invalid reservation request ID")
+                        .statusCode(400)
+                        .build());
+            }
+
+            // approve reservation request
+            ReservationRequestResponseDTO approvedRequest = reservationService.approveRequest(id, adminCommentDTO,
+                    currentUser);
+
+            return ResponseEntity.ok(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(true)
+                    .message("Reservation request approved successfully")
+                    .statusCode(200)
+                    .data(approvedRequest)
+                    .build());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
+    }
+
+    // reject reservation request
+    @PatchMapping(path = "/{id}/reject")
+    public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> rejectRequest(@PathVariable String id,
+            @RequestBody AdminCommentDTO adminCommentDTO,
+            @AuthenticationPrincipal UserEntitiy currentUser) {
+        try {
+            if (id == null || id.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.<ReservationRequestResponseDTO>builder()
+                        .success(false)
+                        .message("Invalid reservation request ID")
+                        .statusCode(400)
+                        .build());
+            }
+
+            // reject reservation request
+            ReservationRequestResponseDTO rejectedRequest = reservationService.rejectRequest(id, adminCommentDTO,
+                    currentUser);
+
+            return ResponseEntity.ok(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(true)
+                    .message("Reservation request rejected successfully")
+                    .statusCode(200)
+                    .data(rejectedRequest)
+                    .build());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
+    }
+
+    // request update on reservation request
+    @PatchMapping(path = "/{id}/request-changes")
+    public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> requestChanges(
+            @PathVariable String id,
+            @RequestBody AdminModificationRequestDTO modificationRequest,
+            @AuthenticationPrincipal UserEntitiy currentUser) {
+
+        try {
+            ReservationRequestResponseDTO updatedRequest = reservationService.requestChanges(id, modificationRequest,
+                    currentUser);
+
+            return ResponseEntity.ok(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(true)
+                    .message("Requested changes on reservation request successfully")
+                    .data(updatedRequest)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
+    }
+
+    // get reservation request history
+    @GetMapping("/{id}/history")
+    public ResponseEntity<ApiResponse<List<ReservationHistoryResponseDTO>>> getRequestHistory(@PathVariable String id) {
+
+        try {
+            List<ReservationHistoryResponseDTO> history = reservationService.getReservationRequestHistory(id);
+
+            return ResponseEntity.ok(ApiResponse.<List<ReservationHistoryResponseDTO>>builder()
+                    .success(true)
+                    .statusCode(200)
+                    .message("Reservation request history retrieved successfully")
+                    .data(history)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<List<ReservationHistoryResponseDTO>>builder()
                     .success(false)
                     .message(e.getMessage())
                     .statusCode(500)

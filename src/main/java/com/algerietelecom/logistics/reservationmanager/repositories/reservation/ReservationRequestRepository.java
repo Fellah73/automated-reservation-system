@@ -1,4 +1,4 @@
-package com.algerietelecom.logistics.reservationmanager.repositories;
+package com.algerietelecom.logistics.reservationmanager.repositories.reservation;
 
 import java.util.List;
 import java.util.Optional;

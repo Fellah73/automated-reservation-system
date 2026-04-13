@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
-import com.algerietelecom.logistics.reservationmanager.repositories.AuthRepository;
+import com.algerietelecom.logistics.reservationmanager.repositories.auth.AuthRepository;
 import com.algerietelecom.logistics.reservationmanager.service.JwtService;
 
 import jakarta.servlet.FilterChain;

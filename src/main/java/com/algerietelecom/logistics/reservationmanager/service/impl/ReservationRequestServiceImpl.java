@@ -6,22 +6,29 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.AdminCommentDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.AdminModificationRequestDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentBatchDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationHistoryResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestOverviewDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestsStatsDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationAttachment;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationHistory;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.HistoryAction;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
 import com.algerietelecom.logistics.reservationmanager.mappers.ReservationRequestMapper;
-import com.algerietelecom.logistics.reservationmanager.repositories.ReservationAttachmentRepository;
-import com.algerietelecom.logistics.reservationmanager.repositories.ReservationRequestRepository;
+import com.algerietelecom.logistics.reservationmanager.repositories.reservation.ReservationAttachmentRepository;
+import com.algerietelecom.logistics.reservationmanager.repositories.reservation.ReservationHistoryRepository;
+import com.algerietelecom.logistics.reservationmanager.repositories.reservation.ReservationRequestRepository;
 import com.algerietelecom.logistics.reservationmanager.service.ReservationRequestService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +36,16 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
 
     private final ReservationRequestRepository reservationRequestRepository;
     private final ReservationAttachmentRepository attachmentRepository;
+    private final ReservationHistoryRepository historyRepository;
     private final ReservationRequestMapper reservationMapper;
+    private final ObjectMapper objectMapper;
+
+    // reservation request history logging
+    @Override
+    @Transactional
+    public void saveHistory(ReservationHistory history) {
+        historyRepository.save(history);
+    }
 
     // create reservation request
     @Override
@@ -55,7 +71,22 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
             request.getPreferences().setRequest(request);
         }
 
-        return reservationRequestRepository.save(request);
+        ReservationRequest reservationRequest = reservationRequestRepository.save(request);
+
+        // log creation in history
+        ReservationHistory history = ReservationHistory.builder()
+                .reservationRequest(reservationRequest)
+                .performedBy(currentUser)
+                .action(HistoryAction.CREATION)
+                .previousStatus(null)
+                .newStatus(ReservationStatus.PENDING)
+                .adminComment(request.getAdminComment())
+                .modificationInstructions(null)
+                .build();
+
+        saveHistory(history);
+
+        return reservationRequest;
     }
 
     // save attachments for a reservation request
@@ -91,9 +122,9 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
         List<ReservationRequest> reservationRequests = reservationRequestRepository
                 .findByCreatedByOrderByCreatedAtDesc(currentUser);
 
-        //if (reservationRequests.isEmpty()) {
-        //    throw new RuntimeException("No reservation requests found");
-        //}
+        // if (reservationRequests.isEmpty()) {
+        // throw new RuntimeException("No reservation requests found");
+        // }
 
         // convert to overview DTOs
         List<ReservationRequestOverviewDTO> overviewReservationRequestesDTOs = reservationRequests.stream()
@@ -132,8 +163,143 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
             throw new RuntimeException("Reservation request not found");
         }
 
-        List<ReservationAttachment> requestAttachments = attachmentRepository.findByReservationRequest(reservationRequest);
+        List<ReservationAttachment> requestAttachments = attachmentRepository
+                .findByReservationRequest(reservationRequest);
 
         return reservationMapper.toResponseDTO(reservationRequest, requestAttachments);
     }
+
+    // approve reservation request
+    @Override
+    @Transactional
+    public ReservationRequestResponseDTO approveRequest(String id, AdminCommentDTO adminCommentDTO,
+            UserEntitiy currentUser) {
+        ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
+                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
+
+        if (reservationRequest.getStatus() == ReservationStatus.APPROVED) {
+            throw new RuntimeException("Approved reservation request cannot be approved again");
+        }
+
+        reservationRequest.setStatus(ReservationStatus.APPROVED);
+        reservationRequest.setAdminComment(adminCommentDTO.getComment());
+        reservationRequest.setUpdatedAt(LocalDateTime.now());
+
+        ReservationRequest updatedRequest = reservationRequestRepository.save(reservationRequest);
+
+        // log approval in history
+        ReservationHistory history = ReservationHistory.builder()
+                .reservationRequest(updatedRequest)
+                .performedBy(currentUser)
+                .action(HistoryAction.APPROVAL)
+                .previousStatus(ReservationStatus.PENDING)
+                .newStatus(ReservationStatus.APPROVED)
+                .adminComment(adminCommentDTO.getComment())
+                .modificationInstructions(null)
+                .build();
+
+        saveHistory(history);
+
+        List<ReservationAttachment> requestAttachments = attachmentRepository.findByReservationRequest(updatedRequest);
+
+        return reservationMapper.toResponseDTO(updatedRequest, requestAttachments);
+    }
+
+    // reject reservation request
+    @Override
+    @Transactional
+    public ReservationRequestResponseDTO rejectRequest(String id, AdminCommentDTO adminCommentDTO,
+            UserEntitiy currentUser) {
+        ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
+                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
+
+        if (reservationRequest.getStatus() == ReservationStatus.REJECTED) {
+            throw new RuntimeException("Rejected reservation request cannot be rejected again");
+        }
+
+        reservationRequest.setStatus(ReservationStatus.REJECTED);
+        reservationRequest.setAdminComment(adminCommentDTO.getComment());
+        reservationRequest.setUpdatedAt(LocalDateTime.now());
+
+        ReservationRequest updatedRequest = reservationRequestRepository.save(reservationRequest);
+
+        List<ReservationAttachment> requestAttachments = attachmentRepository.findByReservationRequest(updatedRequest);
+
+        // log rejection in history
+        ReservationHistory history = ReservationHistory.builder()
+                .reservationRequest(updatedRequest)
+                .performedBy(currentUser)
+                .action(HistoryAction.REJECTION)
+                .previousStatus(ReservationStatus.PENDING)
+                .newStatus(ReservationStatus.REJECTED)
+                .adminComment(adminCommentDTO.getComment())
+                .modificationInstructions(null)
+                .build();
+
+        saveHistory(history);
+
+        return reservationMapper.toResponseDTO(updatedRequest, requestAttachments);
+    }
+
+    // request changes for a reservation request
+    @Override
+    @Transactional
+    public ReservationRequestResponseDTO requestChanges(String id, AdminModificationRequestDTO modificationRequest,
+            UserEntitiy currentUser) {
+        ReservationRequest request = reservationRequestRepository.findByRequestNumber(id)
+                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
+
+        if (request.getStatus() == ReservationStatus.APPROVED) {
+            throw new RuntimeException("Approved reservation request cannot be modified");
+        }
+
+        try {
+            String jsonInstructions = objectMapper.writeValueAsString(modificationRequest);
+
+            request.setStatus(ReservationStatus.MODIFICATION_REQUESTED);
+            request.setModificationInstructions(jsonInstructions);
+            request.setAdminComment(modificationRequest.getGlobalComment());
+
+            ReservationRequest reservationRequest = reservationRequestRepository.save(request);
+
+            // log modification request in history
+            ReservationHistory history = ReservationHistory.builder()
+                    .reservationRequest(reservationRequest)
+                    .performedBy(currentUser)
+                    .action(HistoryAction.MODIFICATION_REQUESTED)
+                    .previousStatus(ReservationStatus.PENDING)
+                    .newStatus(ReservationStatus.MODIFICATION_REQUESTED)
+                    .adminComment(modificationRequest.getGlobalComment())
+                    .modificationInstructions(jsonInstructions)
+                    .build();
+
+            saveHistory(history);
+
+            return reservationMapper.toResponseDTO(reservationRequest, null);
+        } catch (Exception e) {
+            throw new RuntimeException("Error processing request", e);
+        }
+    }
+
+    // get reservation request history
+    @Override
+    @Transactional
+    public List<ReservationHistoryResponseDTO> getReservationRequestHistory(String requestId) {
+        ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(requestId)
+                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
+
+        try {
+
+            List<ReservationHistory> history = historyRepository.findByReservationRequestId(reservationRequest.getId());
+
+            List<ReservationHistoryResponseDTO> responseDTOs = history.stream()
+                    .map(reservationMapper::toHistoryResponseDTO)
+                    .collect(Collectors.toList());
+
+            return responseDTOs;
+        } catch (Exception e) {
+            throw new RuntimeException("Error retrieving reservation request history: " + e.getMessage());
+        }
+    }
+
 }

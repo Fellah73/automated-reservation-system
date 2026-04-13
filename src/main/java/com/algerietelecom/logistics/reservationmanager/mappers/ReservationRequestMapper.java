@@ -2,11 +2,18 @@ package com.algerietelecom.logistics.reservationmanager.mappers;
 
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequestPreference;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.HistoryAction;
+
+import tools.jackson.databind.ObjectMapper;
+
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.AdminModificationRequestDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationHistoryResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestCreateDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestOverviewDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationAttachment;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationHistory;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationParticipant;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +22,12 @@ import java.util.stream.Collectors;
 
 @Component
 public class ReservationRequestMapper {
+
+    private final ObjectMapper objectMapper;
+
+    public ReservationRequestMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     public ReservationRequest toEntity(ReservationRequestCreateDTO dto) {
         if (dto == null)
@@ -136,6 +149,36 @@ public class ReservationRequestMapper {
         dto.setFileName(entity.getFileName());
         dto.setFileType(entity.getFileType());
         dto.setFilePath(entity.getFilePath());
+
+        return dto;
+    }
+
+    public ReservationHistoryResponseDTO toHistoryResponseDTO(ReservationHistory entity) {
+        if (entity == null)
+            return null;
+
+        ReservationHistoryResponseDTO dto = new ReservationHistoryResponseDTO();
+        dto.setId(entity.getId());
+        dto.setAction(entity.getAction().name());
+        dto.setPerformerName(null);
+
+        dto.setPreviousStatus(entity.getPreviousStatus() != null ? entity.getPreviousStatus().name() : null);
+        dto.setNewStatus(entity.getNewStatus().name());
+        dto.setAdminComment(entity.getAdminComment());
+        dto.setTimestamp(entity.getTimestamp());
+
+        if (entity.getAction() == HistoryAction.MODIFICATION_REQUESTED
+                && entity.getModificationInstructions() != null) {
+            try {
+                AdminModificationRequestDTO modificationRequestDTO = objectMapper.readValue(
+                        entity.getModificationInstructions(),
+                        AdminModificationRequestDTO.class);
+
+                dto.setModificationInstructions(modificationRequestDTO);
+            } catch (Exception e) {
+                System.err.println("Reading modification instructions failed: " + e.getMessage());
+            }
+        }
 
         return dto;
     }

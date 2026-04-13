@@ -1,4 +1,4 @@
-package com.algerietelecom.logistics.reservationmanager.repositories;
+package com.algerietelecom.logistics.reservationmanager.repositories.auth;
 
 import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
 import org.springframework.data.jpa.repository.JpaRepository;

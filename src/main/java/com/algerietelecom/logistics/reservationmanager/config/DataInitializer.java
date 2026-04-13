@@ -13,7 +13,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.entities.reservati
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequestPreference;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
-import com.algerietelecom.logistics.reservationmanager.repositories.AuthRepository;
+import com.algerietelecom.logistics.reservationmanager.repositories.auth.AuthRepository;
 import com.algerietelecom.logistics.reservationmanager.service.ReservationRequestService;
 
 import lombok.RequiredArgsConstructor;

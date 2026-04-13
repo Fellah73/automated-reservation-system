@@ -21,6 +21,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -71,8 +72,11 @@ public class ReservationRequest {
 
     private LocalDateTime updatedAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String modificationInstructions;
+
     // relations
-    @Builder.Default 
+    @Builder.Default
     @OneToMany(mappedBy = "reservationRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<ReservationParticipant> participants = new ArrayList<>();
@@ -87,6 +91,7 @@ public class ReservationRequest {
     @OneToOne(mappedBy = "reservationRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private ReservationRequestPreference preferences;
+
     public void setPreferences(ReservationRequestPreference preferences) {
         this.preferences = preferences;
         if (preferences != null) {
@@ -94,9 +99,13 @@ public class ReservationRequest {
         }
     }
 
-    @Builder.Default 
+    @Builder.Default
     @OneToMany(mappedBy = "reservationRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReservationAttachment> attachments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reservationRequest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("timestamp DESC")
+    private List<ReservationHistory> history;
 
     @Column(columnDefinition = "TEXT")
     private String adminComment;

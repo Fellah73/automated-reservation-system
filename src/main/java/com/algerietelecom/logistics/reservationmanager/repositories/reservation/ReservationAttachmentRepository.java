@@ -1,4 +1,4 @@
-package com.algerietelecom.logistics.reservationmanager.repositories;
+package com.algerietelecom.logistics.reservationmanager.repositories.reservation;
 
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationAttachment;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
