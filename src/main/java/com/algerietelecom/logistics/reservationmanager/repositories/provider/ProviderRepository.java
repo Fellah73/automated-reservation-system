@@ -10,7 +10,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Provid
 
 @Repository
 public interface ProviderRepository extends JpaRepository<ProviderEntity, Long> {
-    List<ProviderEntity> findByTypeAndActiveTrue(ProviderType type);
+    List<ProviderEntity> findByType(ProviderType type);
 
     boolean existsByNif(String nif);
 }
