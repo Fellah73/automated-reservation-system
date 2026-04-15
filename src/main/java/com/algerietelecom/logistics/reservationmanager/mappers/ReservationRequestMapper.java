@@ -12,6 +12,8 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRe
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestCreateDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestOverviewDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestResponseDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestUpdateDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationWithHistoryResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationAttachment;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationHistory;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationParticipant;
@@ -181,5 +183,42 @@ public class ReservationRequestMapper {
         }
 
         return dto;
+    }
+
+    public ReservationWithHistoryResponseDTO toWithHistoryResponseDTO(ReservationRequest entity) {
+        if (entity == null)
+            return null;
+
+        ReservationWithHistoryResponseDTO dto = new ReservationWithHistoryResponseDTO();
+        dto.setId(entity.getId());
+        dto.setRequestNumber(entity.getRequestNumber());
+        dto.setMissionType(entity.getMissionType());
+        dto.setDestination(entity.getDestination());
+        dto.setPeopleCount(entity.getPeopleCount());
+        dto.setCreatedAt(entity.getCreatedAt());
+
+        if (entity.getHistory() != null) {
+            dto.setFullHistory(entity.getHistory().stream()
+                    .map(this::toHistoryResponseDTO)
+                    .collect(Collectors.toList()));
+        }
+
+        return dto;
+    }
+
+    public ReservationParticipant toParticipantEntity(ReservationRequestUpdateDTO.ParticipantDTO dto,
+            ReservationRequest request) {
+        if (dto == null)
+            return null;
+
+        ReservationParticipant entity = new ReservationParticipant();
+        entity.setFirstName(dto.getFirstName());
+        entity.setLastName(dto.getLastName());
+        entity.setEmployeeId(dto.getEmployeeId());
+        entity.setRole(dto.getRole());
+        entity.setDepartment(dto.getDepartment());
+        entity.setRequest(request);
+
+        return entity;
     }
 }

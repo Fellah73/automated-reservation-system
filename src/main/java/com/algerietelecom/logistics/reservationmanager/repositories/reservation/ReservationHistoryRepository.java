@@ -2,6 +2,8 @@ package com.algerietelecom.logistics.reservationmanager.repositories.reservation
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable; 
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +16,6 @@ public interface ReservationHistoryRepository extends JpaRepository<ReservationH
     List<ReservationHistory> findByReservationRequestRequestNumberOrderByTimestampDesc(String requestNumber);
 
     List<ReservationHistory> findByReservationRequestId(Long reservationRequestId);
+
+    Page<ReservationHistory> findAllByOrderByTimestampDesc(Pageable pageable);
 }

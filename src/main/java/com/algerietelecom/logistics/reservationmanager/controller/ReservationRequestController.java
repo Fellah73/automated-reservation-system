@@ -2,12 +2,17 @@ package com.algerietelecom.logistics.reservationmanager.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,7 +27,9 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRe
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestOverviewApiResponse;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestOverviewDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestResponseDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestUpdateDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestsStatsDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationWithHistoryResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 import com.algerietelecom.logistics.reservationmanager.mappers.ReservationRequestMapper;
@@ -92,6 +99,59 @@ public class ReservationRequestController {
             return ResponseEntity.status(500).body(ApiResponse.<List<ReservationAttachmentDTO>>builder()
                     .success(false)
                     .message("Failed to add attachments: " + e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
+    }
+
+    // update reservation request
+    @PutMapping(path = "/{id}")
+    public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> updateReservation(
+            @PathVariable String id,
+            @RequestBody ReservationRequestUpdateDTO updateDTO,
+            @AuthenticationPrincipal UserEntitiy currentUser) {
+
+        try {
+            // update reservation request
+            ReservationRequestResponseDTO updatedRequest = reservationService.updateRequest(id, updateDTO, currentUser);
+
+            return ResponseEntity.ok(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(true)
+                    .message("Reservation request updated successfully")
+                    .statusCode(200)
+                    .data(updatedRequest)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(false)
+                    .message("Failed to update reservation request: " + e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
+    }
+
+    // update reservation request attachments
+    @PutMapping(path = "/{id}/attachments")
+    public ResponseEntity<ApiResponse<List<ReservationAttachmentDTO>>> syncAttachments(
+            @PathVariable String id,
+            @RequestBody ReservationAttachmentBatchDTO attachmentBatchDTO,
+            @AuthenticationPrincipal UserEntitiy currentUser) {
+
+        try {
+            List<ReservationAttachmentDTO> savedRequestAttachments = reservationService.updateAttachment(id,
+                    attachmentBatchDTO,
+                    currentUser);
+
+            return ResponseEntity.ok(ApiResponse.<List<ReservationAttachmentDTO>>builder()
+                    .success(true)
+                    .message("Attachments updated successfully")
+                    .statusCode(200)
+                    .data(savedRequestAttachments)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<List<ReservationAttachmentDTO>>builder()
+                    .success(false)
+                    .message("Failed to update attachments: " + e.getMessage())
                     .statusCode(500)
                     .build());
         }
@@ -254,7 +314,7 @@ public class ReservationRequestController {
     }
 
     // get reservation request history
-    @GetMapping("/{id}/history")
+    @GetMapping(path = "/{id}/history")
     public ResponseEntity<ApiResponse<List<ReservationHistoryResponseDTO>>> getRequestHistory(@PathVariable String id) {
 
         try {
@@ -274,4 +334,28 @@ public class ReservationRequestController {
                     .build());
         }
     }
+
+    // get all reservation requests history
+    @GetMapping("/audit-log")
+    public ResponseEntity<ApiResponse<Page<ReservationWithHistoryResponseDTO>>> getAuditLog(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        try {
+
+            Page<ReservationWithHistoryResponseDTO> auditLog = reservationService.getGlobalAuditLog(pageable);
+
+            return ResponseEntity.ok(ApiResponse.<Page<ReservationWithHistoryResponseDTO>>builder()
+                    .success(true)
+                    .data(auditLog)
+                    .build());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<Page<ReservationWithHistoryResponseDTO>>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
+    }
+
 }
