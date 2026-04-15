@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.ApiResponse;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.auth.LoginDto;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
 import com.algerietelecom.logistics.reservationmanager.mappers.AuthMapper;
 import com.algerietelecom.logistics.reservationmanager.service.AuthService;
 

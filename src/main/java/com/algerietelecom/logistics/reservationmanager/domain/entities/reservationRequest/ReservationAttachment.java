@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
-import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
 
 @Entity
 @Table(name = "reservation_attachments")

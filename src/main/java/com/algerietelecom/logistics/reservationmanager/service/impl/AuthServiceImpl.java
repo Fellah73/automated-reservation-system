@@ -3,7 +3,7 @@ package com.algerietelecom.logistics.reservationmanager.service.impl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.algerietelecom.logistics.reservationmanager.domain.entities.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
 import com.algerietelecom.logistics.reservationmanager.repositories.auth.AuthRepository;
 import com.algerietelecom.logistics.reservationmanager.service.AuthService;
 import com.algerietelecom.logistics.reservationmanager.service.JwtService;

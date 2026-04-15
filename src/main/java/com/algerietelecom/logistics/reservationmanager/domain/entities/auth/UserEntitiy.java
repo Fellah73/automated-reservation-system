@@ -1,4 +1,4 @@
-package com.algerietelecom.logistics.reservationmanager.domain.entities;
+package com.algerietelecom.logistics.reservationmanager.domain.entities.auth;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
