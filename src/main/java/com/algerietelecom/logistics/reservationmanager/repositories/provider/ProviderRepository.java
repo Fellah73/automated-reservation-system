@@ -13,4 +13,6 @@ public interface ProviderRepository extends JpaRepository<ProviderEntity, Long> 
     List<ProviderEntity> findByType(ProviderType type);
 
     boolean existsByNif(String nif);
+
+    List<ProviderEntity> findByCityAndType(String city, ProviderType type);
 }

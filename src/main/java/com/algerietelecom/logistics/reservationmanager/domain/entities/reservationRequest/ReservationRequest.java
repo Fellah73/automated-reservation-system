@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationBookingEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -106,6 +107,9 @@ public class ReservationRequest {
     @OneToMany(mappedBy = "reservationRequest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderBy("timestamp DESC")
     private List<ReservationHistory> history;
+
+    @OneToOne(mappedBy = "reservationRequest", cascade = CascadeType.ALL)
+    private AccommodationBookingEntity accommodationBooking;
 
     @Column(columnDefinition = "TEXT")
     private String adminComment;

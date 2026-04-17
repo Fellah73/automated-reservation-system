@@ -1,8 +1,10 @@
 package com.algerietelecom.logistics.reservationmanager.domain.entities.provider;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationBookingEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Provider.ProviderType;
 
 import jakarta.persistence.CascadeType;
@@ -51,12 +53,12 @@ public class ProviderEntity {
     private String email;
     private String phoneNumber;
     private String address;
+    private String city;
     private String contactPerson;
     private String logoUrl;
 
     @Builder.Default
     private Boolean active = true;
-
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -69,6 +71,10 @@ public class ProviderEntity {
 
     @OneToOne(mappedBy = "provider", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private ProviderEvaluationEntity evaluation;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "provider", fetch = FetchType.LAZY)
+    private List<AccommodationBookingEntity> bookings = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
