@@ -8,9 +8,12 @@ import org.springframework.stereotype.Service;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.contracts.ProviderContractResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.ContractServicesResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderContractEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.providerServices.AccommodationServiceEntity;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.providerServices.CateringServiceEntity;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.providerServices.FlightServiceEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Provider.ProviderType;
 import com.algerietelecom.logistics.reservationmanager.mappers.ProviderMapper;
 import com.algerietelecom.logistics.reservationmanager.repositories.provider.ProviderContractRepository;
@@ -185,17 +188,19 @@ public class ProviderServiceImpl implements ProviderService {
                         createRoom(contract, "SENIOR", 22000));
                 contract.setAccommodationServices(defaultRooms);
             }
-            case TRANSPORT_COMPANY -> {
-
-            }
             case CATERING -> {
-
-            }
-            case TRAVEL_AGENCY -> {
-
+                List<CateringServiceEntity> defaultMenus = List.of(
+                        createMenu(contract, "Menu Standard", "DEJEUNER", 1500, true),
+                        createMenu(contract, "Menu Business", "DEJEUNER", 2500, true),
+                        createMenu(contract, "Menu Dîner", "DINER", 2000, false));
+                contract.setCateringServices(defaultMenus);
             }
             case AIRLINE -> {
-
+                List<FlightServiceEntity> defaultFlights = List.of(
+                        createFlight(contract, "Alger - Sétif", "ECONOMIQUE", 4500, 23),
+                        createFlight(contract, "Alger - Sétif", "AFFAIRE", 8500, 40),
+                        createFlight(contract, "Alger - Oran", "ECONOMIQUE", 6000, 23));
+                contract.setFlightServices(defaultFlights);
             }
         }
     }
@@ -207,6 +212,31 @@ public class ProviderServiceImpl implements ProviderService {
                 .pricePerNight(BigDecimal.valueOf(price))
                 .breakfastIncluded(true)
                 .amenities("Standard AT Configuration")
+                .contract(contract)
+                .build();
+    }
+
+    // create menu method
+    private CateringServiceEntity createMenu(ProviderContractEntity contract, String name, String mealType,
+            double price, boolean drinks) {
+        return CateringServiceEntity.builder()
+                .menuName(name)
+                .mealType(mealType)
+                .pricePerPerson(BigDecimal.valueOf(price))
+                .drinksIncluded(drinks)
+                .contract(contract)
+                .build();
+    }
+
+    // create flight method
+    private FlightServiceEntity createFlight(ProviderContractEntity contract, String route, String cabin, double price,
+            int baggage) {
+        return FlightServiceEntity.builder()
+                .route(route)
+                .cabinClass(cabin)
+                .price(BigDecimal.valueOf(price))
+                .baggageAllowance(baggage)
+                .isDirect(true)
                 .contract(contract)
                 .build();
     }
@@ -317,39 +347,19 @@ public class ProviderServiceImpl implements ProviderService {
     }
 
     // get all services for a contract method
-    {
-        /*
-         * @Override
-         * public ContractServicesResponseDTO getContractServices(Long contractId) {
-         * try {
-         * ProviderContractEntity contract =
-         * providerContractRepository.findById(contractId)
-         * .orElseThrow(() -> new RuntimeException("Contract not found with id: " +
-         * contractId));
-         * 
-         * if (contract.getProvider().getType() == ProviderType.HOTEL) {
-         * // clear circular references
-         * contract.getCateringServices().forEach(service -> service.setContract(null));
-         * contract.getFlightServices().forEach(service -> service.setContract(null));
-         * } else if (contract.getProvider().getType() == ProviderType.CATERING) {
-         * // clear circular references
-         * contract.getAccommodationServices().forEach(service ->
-         * service.setContract(null));
-         * contract.getFlightServices().forEach(service ->
-         * service.getContract().setProvider(null));
-         * } else {
-         * // clear circular references
-         * contract.getCateringServices().forEach(service -> service.setContract(null));
-         * contract.getAccommodationServices().forEach(service ->
-         * service.getContract().setProvider(null));
-         * }
-         * 
-         * ContractServicesResponseDTO servicesDto =
-         * providerMapper.toContractServicesDto(contract);
-         * return servicesDto;
-         * } catch (Exception e) {
-         * throw new RuntimeException("Failed to retrieve contract services: " +
-         * e.getMessage());
-         * }
-         */}
+    @Override
+    @Transactional
+    public ContractServicesResponseDTO getContractServices(Long contractId) {
+        try {
+            ProviderContractEntity contract = providerContractRepository.findById(contractId)
+                    .orElseThrow(() -> new RuntimeException("Contract not found with id: " +
+                            contractId));
+
+            ContractServicesResponseDTO servicesDto = providerMapper.toContractServicesDto(contract);
+            return servicesDto;
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    e.getMessage());
+        }
+    }
 }

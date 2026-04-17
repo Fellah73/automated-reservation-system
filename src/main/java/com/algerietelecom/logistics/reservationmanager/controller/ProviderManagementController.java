@@ -23,6 +23,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.cont
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.UpdateProviderDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.ContractServicesResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderContractEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
@@ -269,29 +270,23 @@ public class ProviderManagementController {
 
     // contract services routes
     // retrieve services for a contract of a provider
-    {
-        /*
-         * @GetMapping("/{contractId}/services")
-         * public ResponseEntity<ApiResponse<ContractServicesResponseDTO>>
-         * getServices(@PathVariable Long contractId) {
-         * try {
-         * ContractServicesResponseDTO services =
-         * providerService.getContractServices(contractId);
-         * return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<
-         * ContractServicesResponseDTO>builder()
-         * .success(true)
-         * .message("Services retrieved successfully")
-         * .statusCode(200)
-         * .data(services)
-         * .build());
-         * } catch (Exception e) {
-         * return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-         * .body(ApiResponse.<ContractServicesResponseDTO>builder()
-         * .success(false)
-         * .message("Failed to retrieve services: " + e.getMessage())
-         * .statusCode(500)
-         * .build());
-         * }
-         * }
-         */}
+    @GetMapping("/{contractId}/services")
+    public ResponseEntity<ApiResponse<ContractServicesResponseDTO>> getServices(@PathVariable Long contractId) {
+        try {
+            ContractServicesResponseDTO services = providerService.getContractServices(contractId);
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<ContractServicesResponseDTO>builder()
+                    .success(true)
+                    .message("Services retrieved successfully")
+                    .statusCode(200)
+                    .data(services)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<ContractServicesResponseDTO>builder()
+                            .success(false)
+                            .message("Failed to retrieve services: " + e.getMessage())
+                            .statusCode(500)
+                            .build());
+        }
+    }
 }

@@ -8,6 +8,10 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.cont
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.UpdateProviderDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.AccommodationServiceDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.CateringServiceDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.ContractServicesResponseDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.FlightServiceDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderContractEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
 
@@ -151,5 +155,38 @@ public class ProviderMapper {
         dto.setTermsAndConditions(entity.getTermsAndConditions());
 
         return dto;
+    }
+
+    public ContractServicesResponseDTO toContractServicesDto(ProviderContractEntity entity) {
+        if (entity == null)
+            return null;
+
+        ContractServicesResponseDTO responseDTO = new ContractServicesResponseDTO();
+        responseDTO.setContractId(entity.getId());
+        responseDTO.setProviderName(entity.getProvider().getName());
+        responseDTO.setProviderType(entity.getProvider().getType().toString());
+
+        if (entity.getAccommodationServices() != null) {
+            responseDTO.setAccommodations(entity.getAccommodationServices().stream()
+                    .map(acc -> new AccommodationServiceDTO(acc.getId(), acc.getRoomType(),
+                            acc.getPricePerNight(), acc.getBreakfastIncluded(), acc.getAmenities()))
+                    .toList());
+        }
+
+        if (entity.getCateringServices() != null) {
+            responseDTO.setCatering(entity.getCateringServices().stream()
+                    .map(cat -> new CateringServiceDTO(cat.getId(), cat.getMenuName(), cat.getMealType(),
+                            cat.getPricePerPerson(), cat.getDrinksIncluded()))
+                    .toList());
+        }
+
+        if (entity.getFlightServices() != null) {
+            responseDTO.setFlights(entity.getFlightServices().stream()
+                    .map(f -> new FlightServiceDTO(f.getId(), f.getRoute(), f.getCabinClass(), f.getPrice(),
+                            f.getBaggageAllowance(), f.getIsDirect()))
+                    .toList());
+        }
+
+        return responseDTO;
     }
 }
