@@ -6,17 +6,22 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.contracts.ProviderContractResponseDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.evaluation.ProviderEvaluationRequestDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.evaluation.ProviderEvaluationResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.ContractServicesResponseDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderContractEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEvaluationEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.providerServices.AccommodationServiceEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.providerServices.CateringServiceEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.providerServices.FlightServiceEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Provider.ProviderType;
 import com.algerietelecom.logistics.reservationmanager.mappers.ProviderMapper;
 import com.algerietelecom.logistics.reservationmanager.repositories.provider.ProviderContractRepository;
+import com.algerietelecom.logistics.reservationmanager.repositories.provider.ProviderEvaluationRepository;
 import com.algerietelecom.logistics.reservationmanager.repositories.provider.ProviderRepository;
 import com.algerietelecom.logistics.reservationmanager.service.ProviderService;
 
@@ -27,12 +32,15 @@ public class ProviderServiceImpl implements ProviderService {
 
     private final ProviderRepository providerRepository;
     private final ProviderContractRepository providerContractRepository;
+    private final ProviderEvaluationRepository providerEvaluationRepository;
     private final ProviderMapper providerMapper;
 
     public ProviderServiceImpl(ProviderRepository providerRepository,
-            ProviderContractRepository providerContractRepository, ProviderMapper providerMapper) {
+            ProviderContractRepository providerContractRepository,
+            ProviderEvaluationRepository providerEvaluationRepository, ProviderMapper providerMapper) {
         this.providerRepository = providerRepository;
         this.providerContractRepository = providerContractRepository;
+        this.providerEvaluationRepository = providerEvaluationRepository;
         this.providerMapper = providerMapper;
     }
 
@@ -362,4 +370,64 @@ public class ProviderServiceImpl implements ProviderService {
                     e.getMessage());
         }
     }
+
+    // providers evaluation methods
+    @Override
+    @Transactional
+    public ProviderEvaluationRequestDTO createEvaluationForProvider(Long providerId,
+            ProviderEvaluationRequestDTO evaluationDto, UserEntitiy currentUser) {
+        try {
+            ProviderEntity provider = providerRepository.findById(providerId)
+                    .orElseThrow(() -> new RuntimeException("Provider not found with id: " + providerId));
+
+            ProviderEvaluationEntity evaluation = ProviderEvaluationEntity.builder()
+                    .delayRating(evaluationDto.getDelayRating())
+                    .serviceQualityRating(evaluationDto.getServiceQualityRating())
+                    .conformityRating(evaluationDto.getConformityRating())
+                    .costRating(evaluationDto.getCostRating())
+                    .overallRating((evaluationDto.getDelayRating() + evaluationDto.getServiceQualityRating()
+                            + evaluationDto.getConformityRating() + evaluationDto.getCostRating()) / 4)
+                    .comment(evaluationDto.getComment())
+                    .provider(provider)
+                    .evaluatedBy(currentUser)
+                    .build();
+
+            providerEvaluationRepository.save(evaluation);
+
+            return evaluationDto;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve evaluations: " + e.getMessage());
+        }
+    }
+
+    // retrieve evaluations for a provider method
+    @Override
+    @Transactional
+    public ProviderEvaluationResponseDTO getEvaluationsByProvider(Long providerId) {
+        try {
+            ProviderEntity provider = providerRepository.findById(providerId)
+                    .orElseThrow(() -> new RuntimeException("Provider not found with id: " + providerId));
+
+            ProviderEvaluationEntity evaluations = providerEvaluationRepository
+                    .findByProviderId(provider.getId());
+
+            if (evaluations == null) {
+                throw new RuntimeException("No evaluations found for this provider");
+            }
+
+            ProviderEvaluationResponseDTO responseDto = ProviderEvaluationResponseDTO.builder()
+                    .delayRating(evaluations.getDelayRating())
+                    .serviceQualityRating(evaluations.getServiceQualityRating())
+                    .conformityRating(evaluations.getConformityRating())
+                    .costRating(evaluations.getCostRating())
+                    .overallRating(evaluations.getOverallRating())
+                    .comment(evaluations.getComment())
+                    .build();
+
+            return responseDto;
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
 }

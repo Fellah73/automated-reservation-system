@@ -20,6 +20,8 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.ApiResponse;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.contracts.ProviderContractRequestDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.contracts.ProviderContractResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.contracts.ProviderContractUpdateRequestDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.evaluation.ProviderEvaluationRequestDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.evaluation.ProviderEvaluationResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.UpdateProviderDto;
@@ -31,6 +33,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Provid
 import com.algerietelecom.logistics.reservationmanager.mappers.ProviderMapper;
 import com.algerietelecom.logistics.reservationmanager.service.ProviderService;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -285,6 +288,62 @@ public class ProviderManagementController {
                     .body(ApiResponse.<ContractServicesResponseDTO>builder()
                             .success(false)
                             .message("Failed to retrieve services: " + e.getMessage())
+                            .statusCode(500)
+                            .build());
+        }
+    }
+
+    // providers evaluation
+    @PostMapping("/{providerId}/evaluations")
+    public ResponseEntity<ApiResponse<ProviderEvaluationRequestDTO>> createEvaluation(
+            @PathVariable Long providerId,
+            @RequestBody ProviderEvaluationRequestDTO evaluationDto,
+            @AuthenticationPrincipal UserEntitiy currentUser) {
+        try {
+            // Appelle le service pour créer l'évaluation
+            ProviderEvaluationRequestDTO result = providerService.createEvaluationForProvider(providerId,
+                    evaluationDto, currentUser);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<ProviderEvaluationRequestDTO>builder()
+                    .success(true)
+                    .message("Evaluation created successfully")
+                    .statusCode(201)
+                    .data(result)
+                    .build());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<ProviderEvaluationRequestDTO>builder()
+                    .success(false)
+                    .message("Provider or User not found: " + e.getMessage())
+                    .statusCode(404)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<ProviderEvaluationRequestDTO>builder()
+                            .success(false)
+                            .message("Failed to create evaluation: " + e.getMessage())
+                            .statusCode(500)
+                            .build());
+        }
+    }
+
+    // retrieve evaluations for a provider
+    @GetMapping("/{providerId}/evaluations")
+    public ResponseEntity<ApiResponse<ProviderEvaluationResponseDTO>> getProviderEvaluations(
+            @PathVariable Long providerId) {
+        try {
+            ProviderEvaluationResponseDTO evaluations = providerService.getEvaluationsByProvider(providerId);
+
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<ProviderEvaluationResponseDTO>builder()
+                    .success(true)
+                    .message("Evaluations retrieved successfully")
+                    .statusCode(200)
+                    .data(evaluations)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<ProviderEvaluationResponseDTO>builder()
+                            .success(false)
+                            .message("Failed to retrieve evaluations: " + e.getMessage())
                             .statusCode(500)
                             .build());
         }

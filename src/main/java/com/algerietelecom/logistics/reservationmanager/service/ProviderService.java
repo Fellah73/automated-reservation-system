@@ -3,9 +3,12 @@ package com.algerietelecom.logistics.reservationmanager.service;
 import java.util.List;
 
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.contracts.ProviderContractResponseDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.evaluation.ProviderEvaluationRequestDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.evaluation.ProviderEvaluationResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.ContractServicesResponseDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderContractEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Provider.ProviderType;
@@ -42,4 +45,13 @@ public interface ProviderService {
 
     // get all services for a contract
     ContractServicesResponseDTO getContractServices(Long contractId);
+
+    // evaluation methods
+
+    // create evaluations for a provider
+    ProviderEvaluationRequestDTO createEvaluationForProvider(Long providerId,
+            ProviderEvaluationRequestDTO evaluationDto, UserEntitiy currentUser);
+
+    // get evaluations for a provider
+    ProviderEvaluationResponseDTO getEvaluationsByProvider(Long providerId);
 }
