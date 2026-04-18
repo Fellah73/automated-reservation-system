@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.ApiResponse;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.auth.LoginDto;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.mappers.AuthMapper;
 import com.algerietelecom.logistics.reservationmanager.service.AuthService;
 
@@ -30,7 +30,7 @@ public class AuthController {
     @PostMapping(path = "/login")
     public ResponseEntity<ApiResponse<String>> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {
         try {
-            UserEntitiy userEntity = authMapper.toEntity(loginDto);
+            UserEntity userEntity = authMapper.toEntity(loginDto);
             String token = authService.login(userEntity);
 
             Cookie cookie = new Cookie("authToken", token);
@@ -72,9 +72,9 @@ public class AuthController {
                         .build());
             }
 
-            UserEntitiy user = authService.getMyInfo(email);
+            UserEntity user = authService.getMyInfo(email);
 
-            return ResponseEntity.status(200).body(ApiResponse.<UserEntitiy>builder()
+            return ResponseEntity.status(200).body(ApiResponse.<UserEntity>builder()
                     .success(true)
                     .message("User found")
                     .statusCode(200)

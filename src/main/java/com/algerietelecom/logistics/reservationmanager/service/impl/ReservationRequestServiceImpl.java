@@ -18,7 +18,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRe
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestUpdateDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestsStatsDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationWithHistoryResponseDTO;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationAttachment;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationHistory;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
@@ -54,7 +54,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
     // create reservation request
     @Override
     @Transactional
-    public ReservationRequest createRequest(ReservationRequest request, UserEntitiy currentUser) {
+    public ReservationRequest createRequest(ReservationRequest request, UserEntity currentUser) {
         int year = LocalDateTime.now().getYear();
         long total = reservationRequestRepository.count();
         long next = total + 1;
@@ -97,7 +97,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
     @Override
     @Transactional
     public List<ReservationAttachmentDTO> saveAttachment(String id, ReservationAttachmentBatchDTO attachmentBatchDTO,
-            UserEntitiy currentUser) {
+            UserEntity currentUser) {
 
         ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
                 .orElseThrow(() -> new RuntimeException("Reservation request not found"));
@@ -122,7 +122,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
     // get all my reservations
     @Override
     @Transactional
-    public List<ReservationRequestOverviewDTO> getMyRequests(UserEntitiy currentUser) {
+    public List<ReservationRequestOverviewDTO> getMyRequests(UserEntity currentUser) {
         List<ReservationRequest> reservationRequests = reservationRequestRepository
                 .findByCreatedByOrderByCreatedAtDesc(currentUser);
 
@@ -177,7 +177,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
     @Override
     @Transactional
     public ReservationRequestResponseDTO approveRequest(String id, AdminCommentDTO adminCommentDTO,
-            UserEntitiy currentUser) {
+            UserEntity currentUser) {
         ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
                 .orElseThrow(() -> new RuntimeException("Reservation request not found"));
 
@@ -213,7 +213,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
     @Override
     @Transactional
     public ReservationRequestResponseDTO rejectRequest(String id, AdminCommentDTO adminCommentDTO,
-            UserEntitiy currentUser) {
+            UserEntity currentUser) {
         ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
                 .orElseThrow(() -> new RuntimeException("Reservation request not found"));
 
@@ -249,7 +249,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
     @Override
     @Transactional
     public ReservationRequestResponseDTO requestChanges(String id, AdminModificationRequestDTO modificationRequest,
-            UserEntitiy currentUser) {
+            UserEntity currentUser) {
         ReservationRequest request = reservationRequestRepository.findByRequestNumber(id)
                 .orElseThrow(() -> new RuntimeException("Reservation request not found"));
 
@@ -328,7 +328,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
     @Override
     @Transactional
     public ReservationRequestResponseDTO updateRequest(String id, ReservationRequestUpdateDTO updateDTO,
-            UserEntitiy currentUser) {
+            UserEntity currentUser) {
         ReservationRequest request = reservationRequestRepository.findByRequestNumber(id)
                 .orElseThrow(() -> new RuntimeException("Reservation request not found"));
 
@@ -393,7 +393,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
     @Override
     @Transactional
     public List<ReservationAttachmentDTO> updateAttachment(String id, ReservationAttachmentBatchDTO attachmentBatchDTO,
-            UserEntitiy currentUser) {
+            UserEntity currentUser) {
 
         ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
                 .orElseThrow(() -> new RuntimeException("Reservation request not found"));

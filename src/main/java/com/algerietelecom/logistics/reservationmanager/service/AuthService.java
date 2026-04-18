@@ -1,9 +1,9 @@
 package com.algerietelecom.logistics.reservationmanager.service;
 
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 
 public interface AuthService {
-    String login(UserEntitiy user);
+    String login(UserEntity user);
 
-    UserEntitiy getMyInfo(String email);
+    UserEntity getMyInfo(String email);
 }

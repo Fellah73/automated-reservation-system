@@ -11,7 +11,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodation
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationBookingEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationReservationEntity;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.providerServices.AccommodationServiceEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
@@ -67,7 +67,7 @@ public class AccommodationServiceImpl implements AccommodationService {
     @Override
     @Transactional
     public AccommodationBookingResponseDto createBooking(AccommodationBookingRequestDto bookingRequestDto,
-            UserEntitiy currentUser) {
+            UserEntity currentUser) {
         try {
             // reseration check
             ReservationRequest reservationRequest = reservationRequestRepository
@@ -131,7 +131,7 @@ public class AccommodationServiceImpl implements AccommodationService {
     @Override
     @Transactional
     public AccommodationBookingResponseDto updateBooking(Long id, AccommodationBookingRequestDto bookingRequestDto,
-            UserEntitiy currentUser) {
+            UserEntity currentUser) {
         try {
             AccommodationBookingEntity existingBooking = accommodationBookingRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Accommodation booking not found with id: " + id));
@@ -194,7 +194,7 @@ public class AccommodationServiceImpl implements AccommodationService {
     // get booking by id
     @Override
     @Transactional
-    public AccommodationBookingDetailsResponseDto getBookingById(Long id, UserEntitiy currentUser) {
+    public AccommodationBookingDetailsResponseDto getBookingById(Long id, UserEntity currentUser) {
         try {
             AccommodationBookingEntity bookingEntity = accommodationBookingRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Accommodation booking not found with id: " + id));

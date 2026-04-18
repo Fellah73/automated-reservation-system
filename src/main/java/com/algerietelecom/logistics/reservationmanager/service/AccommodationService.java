@@ -6,7 +6,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodation
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingRequestDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 
 public interface AccommodationService {
     // search hotels by city
@@ -14,12 +14,12 @@ public interface AccommodationService {
 
     // create booking for accommodation
     AccommodationBookingResponseDto createBooking(AccommodationBookingRequestDto bookingRequestDto,
-            UserEntitiy currentUser);
+            UserEntity currentUser);
 
     // update booking for accommodation
     AccommodationBookingResponseDto updateBooking(Long id, AccommodationBookingRequestDto bookingRequestDto,
-            UserEntitiy currentUser);
+            UserEntity currentUser);
 
     // get booking by id
-    AccommodationBookingDetailsResponseDto getBookingById(Long id, UserEntitiy currentUser);
+    AccommodationBookingDetailsResponseDto getBookingById(Long id, UserEntity currentUser);
 }

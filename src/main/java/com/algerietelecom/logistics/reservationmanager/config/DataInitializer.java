@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationParticipant;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequestPreference;
@@ -30,11 +30,11 @@ public class DataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
 
-        UserEntitiy admin = userRepository.findAll().stream()
+        UserEntity admin = userRepository.findAll().stream()
                 .filter(u -> "admin".equals(u.getUsername()))
                 .findFirst()
                 .orElseGet(() -> {
-                    UserEntitiy newAdmin = new UserEntitiy();
+                    UserEntity newAdmin = new UserEntity();
                     newAdmin.setUsername("admin");
                     newAdmin.setPassword(passwordEncoder.encode("admin123"));
                     newAdmin.setEmail("admin@telecom.com");

@@ -19,7 +19,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodation
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingRequestDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.service.AccommodationService;
 
 import lombok.AllArgsConstructor;
@@ -58,7 +58,7 @@ public class AccommodationController {
     @PostMapping(path = "/create")
     public ResponseEntity<ApiResponse<AccommodationBookingResponseDto>> createBooking(
             @RequestBody AccommodationBookingRequestDto bookingRequestDto,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
         try {
             AccommodationBookingResponseDto result = accommodationService.createBooking(bookingRequestDto, currentUser);
 
@@ -84,7 +84,7 @@ public class AccommodationController {
     public ResponseEntity<ApiResponse<AccommodationBookingResponseDto>> updateBooking(
             @PathVariable Long id,
             @RequestBody AccommodationBookingRequestDto bookingRequestDto,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
         try {
             AccommodationBookingResponseDto result = accommodationService.updateBooking(id, bookingRequestDto,
                     currentUser);
@@ -110,7 +110,7 @@ public class AccommodationController {
     @GetMapping(path = "/{id}")
     public ResponseEntity<ApiResponse<AccommodationBookingDetailsResponseDto>> getBookingById(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
         try {
             AccommodationBookingDetailsResponseDto result = accommodationService.getBookingById(id, currentUser);
             return ResponseEntity.ok(ApiResponse.<AccommodationBookingDetailsResponseDto>builder()

@@ -11,7 +11,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.eval
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.ContractServicesResponseDTO;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderContractEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEvaluationEntity;
@@ -375,7 +375,7 @@ public class ProviderServiceImpl implements ProviderService {
     @Override
     @Transactional
     public ProviderEvaluationRequestDTO createEvaluationForProvider(Long providerId,
-            ProviderEvaluationRequestDTO evaluationDto, UserEntitiy currentUser) {
+            ProviderEvaluationRequestDTO evaluationDto, UserEntity currentUser) {
         try {
             ProviderEntity provider = providerRepository.findById(providerId)
                     .orElseThrow(() -> new RuntimeException("Provider not found with id: " + providerId));

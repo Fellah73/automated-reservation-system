@@ -8,7 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.repositories.auth.AuthRepository;
 import com.algerietelecom.logistics.reservationmanager.service.JwtService;
 
@@ -50,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (jwtService.isTokenValid(token)) {
                     String email = jwtService.extractEmail(token);
 
-                    UserEntitiy currentUser = userRepository.findAll().stream()
+                    UserEntity currentUser = userRepository.findAll().stream()
                             .filter(u -> "admin".equals(u.getUsername()))
                             .findFirst()
                             .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'email : " + email));

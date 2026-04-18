@@ -2,7 +2,7 @@ package com.algerietelecom.logistics.reservationmanager.domain.entities.provider
 
 import java.time.LocalDate;
 
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,5 +48,5 @@ public class ProviderEvaluationEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evaluated_by", nullable = false)
-    private UserEntitiy evaluatedBy;
+    private UserEntity evaluatedBy;
 }

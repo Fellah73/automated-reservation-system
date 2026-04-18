@@ -15,7 +15,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRe
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestUpdateDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestsStatsDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationWithHistoryResponseDTO;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationHistory;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 
@@ -23,21 +23,21 @@ public interface ReservationRequestService {
 
         // user operations
         // CRUD operations for reservation requests & attachments
-        ReservationRequest createRequest(ReservationRequest request, UserEntitiy currentUser);
+        ReservationRequest createRequest(ReservationRequest request, UserEntity currentUser);
 
         List<ReservationAttachmentDTO> saveAttachment(
                         String requestNumber, ReservationAttachmentBatchDTO attachmentBatchDTO,
-                        UserEntitiy currentUser);
+                        UserEntity currentUser);
 
         ReservationRequestResponseDTO updateRequest(String id, ReservationRequestUpdateDTO updateDTO,
-                        UserEntitiy currentUser);
+                        UserEntity currentUser);
 
         List<ReservationAttachmentDTO> updateAttachment(
                         String requestNumber, ReservationAttachmentBatchDTO attachmentBatchDTO,
-                        UserEntitiy currentUser);
+                        UserEntity currentUser);
 
         // Retrieval operations
-        List<ReservationRequestOverviewDTO> getMyRequests(UserEntitiy currentUser);
+        List<ReservationRequestOverviewDTO> getMyRequests(UserEntity currentUser);
 
         ReservationRequestResponseDTO getRequestById(String id);
 
@@ -46,13 +46,13 @@ public interface ReservationRequestService {
         // admin operations
         // approve, reject, request changes
         ReservationRequestResponseDTO approveRequest(String id, AdminCommentDTO adminCommentDTO,
-                        UserEntitiy currentUser);
+                        UserEntity currentUser);
 
         ReservationRequestResponseDTO rejectRequest(String id, AdminCommentDTO adminCommentDTO,
-                        UserEntitiy currentUser);
+                        UserEntity currentUser);
 
         ReservationRequestResponseDTO requestChanges(String id, AdminModificationRequestDTO modificationRequest,
-                        UserEntitiy currentUser);
+                        UserEntity currentUser);
 
         // history & audit log
         void saveHistory(ReservationHistory history);

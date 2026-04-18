@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 
 @Entity
 @Table(name = "reservation_attachments")
@@ -31,7 +31,7 @@ public class ReservationAttachment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uploaded_by_id")
-    private UserEntitiy uploadedBy;
+    private UserEntity uploadedBy;
 
     @PrePersist
     protected void onCreate() {

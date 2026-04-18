@@ -8,14 +8,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
 
 @Repository
 public interface ReservationRequestRepository extends JpaRepository<ReservationRequest, Long> {
 
-    List<ReservationRequest> findByCreatedByOrderByCreatedAtDesc(UserEntitiy user);
+    List<ReservationRequest> findByCreatedByOrderByCreatedAtDesc(UserEntity user);
 
     Optional<ReservationRequest> findByRequestNumber(String requestNumber);
 

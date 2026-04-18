@@ -3,7 +3,7 @@ package com.algerietelecom.logistics.reservationmanager.service.impl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.repositories.auth.AuthRepository;
 import com.algerietelecom.logistics.reservationmanager.service.AuthService;
 import com.algerietelecom.logistics.reservationmanager.service.JwtService;
@@ -20,8 +20,8 @@ public class AuthServiceImpl implements AuthService {
 
     // login method
     @Override
-    public String login(UserEntitiy userEntity) {
-        UserEntitiy userRecord = userRepository.findAllByEmail(userEntity.getEmail());
+    public String login(UserEntity userEntity) {
+        UserEntity userRecord = userRepository.findAllByEmail(userEntity.getEmail());
         if (userRecord == null) {
             throw new RuntimeException("User not found");
         }
@@ -35,8 +35,8 @@ public class AuthServiceImpl implements AuthService {
 
     // me method
     @Override
-    public UserEntitiy getMyInfo(String email) {
-        UserEntitiy user = userRepository.findAllByEmail(email);
+    public UserEntity getMyInfo(String email) {
+        UserEntity user = userRepository.findAllByEmail(email);
 
         if (user == null) {
             throw new RuntimeException("User not found");

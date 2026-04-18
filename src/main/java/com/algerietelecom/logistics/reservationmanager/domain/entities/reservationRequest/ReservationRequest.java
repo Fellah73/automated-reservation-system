@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationBookingEntity;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -50,7 +50,7 @@ public class ReservationRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntitiy createdBy;
+    private UserEntity createdBy;
 
     private String missionType;
     private String destination;

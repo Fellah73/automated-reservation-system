@@ -26,7 +26,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.UpdateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.ContractServicesResponseDTO;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderContractEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Provider.ProviderType;
@@ -49,7 +49,7 @@ public class ProviderManagementController {
     @PostMapping(path = "/create")
     public ResponseEntity<ApiResponse<CreateProviderDto>> createProvider(
             @RequestBody CreateProviderDto createDTO,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
 
@@ -78,7 +78,7 @@ public class ProviderManagementController {
     public ResponseEntity<ApiResponse<CreateProviderDto>> updateProvider(
             @PathVariable Long id,
             @RequestBody UpdateProviderDto updateDTO,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
 
@@ -106,7 +106,7 @@ public class ProviderManagementController {
     @DeleteMapping(path = "/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteProvider(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
             providerService.softDeleteProvider(id);
@@ -128,7 +128,7 @@ public class ProviderManagementController {
     @PatchMapping(path = "/{id}/restore")
     public ResponseEntity<ApiResponse<CreateProviderDto>> restoreProvider(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
             CreateProviderDto restoredProvider = providerService.restoreProvider(id);
@@ -151,7 +151,7 @@ public class ProviderManagementController {
     @GetMapping(path = "/all")
     public ResponseEntity<ApiResponse<List<ProviderDto>>> getAllProviders(
             @RequestParam(required = false) ProviderType type,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
             List<ProviderDto> providers = providerService.getAllProviders(type);
@@ -298,7 +298,7 @@ public class ProviderManagementController {
     public ResponseEntity<ApiResponse<ProviderEvaluationRequestDTO>> createEvaluation(
             @PathVariable Long providerId,
             @RequestBody ProviderEvaluationRequestDTO evaluationDto,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
         try {
             // Appelle le service pour créer l'évaluation
             ProviderEvaluationRequestDTO result = providerService.createEvaluationForProvider(providerId,

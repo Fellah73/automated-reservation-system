@@ -30,7 +30,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRe
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestUpdateDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationRequestsStatsDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationWithHistoryResponseDTO;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 import com.algerietelecom.logistics.reservationmanager.mappers.ReservationRequestMapper;
 import com.algerietelecom.logistics.reservationmanager.service.ReservationRequestService;
@@ -50,7 +50,7 @@ public class ReservationRequestController {
     @PostMapping(path = "/create")
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> createReservation(
             @RequestBody ReservationRequestCreateDTO createDTO,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
             // convert DTO to entity
@@ -82,7 +82,7 @@ public class ReservationRequestController {
     public ResponseEntity<ApiResponse<List<ReservationAttachmentDTO>>> addAttachment(
             @PathVariable String id,
             @RequestBody ReservationAttachmentBatchDTO attachmentBatchDTO,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
             List<ReservationAttachmentDTO> savedRequestAttachments = reservationService.saveAttachment(id,
@@ -109,7 +109,7 @@ public class ReservationRequestController {
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> updateReservation(
             @PathVariable String id,
             @RequestBody ReservationRequestUpdateDTO updateDTO,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
             // update reservation request
@@ -135,7 +135,7 @@ public class ReservationRequestController {
     public ResponseEntity<ApiResponse<List<ReservationAttachmentDTO>>> syncAttachments(
             @PathVariable String id,
             @RequestBody ReservationAttachmentBatchDTO attachmentBatchDTO,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
             List<ReservationAttachmentDTO> savedRequestAttachments = reservationService.updateAttachment(id,
@@ -160,7 +160,7 @@ public class ReservationRequestController {
     // get all user reservations
     @GetMapping(path = "/my")
     public ResponseEntity<ApiResponse<ReservationRequestOverviewApiResponse>> getMyReservations(
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
             // get my reservation requests
@@ -224,7 +224,7 @@ public class ReservationRequestController {
     @PatchMapping(path = "/{id}/approve")
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> approveRequest(@PathVariable String id,
             @RequestBody AdminCommentDTO adminCommentDTO,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
         try {
             if (id == null || id.isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.<ReservationRequestResponseDTO>builder()
@@ -258,7 +258,7 @@ public class ReservationRequestController {
     @PatchMapping(path = "/{id}/reject")
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> rejectRequest(@PathVariable String id,
             @RequestBody AdminCommentDTO adminCommentDTO,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
         try {
             if (id == null || id.isEmpty()) {
                 return ResponseEntity.badRequest().body(ApiResponse.<ReservationRequestResponseDTO>builder()
@@ -293,7 +293,7 @@ public class ReservationRequestController {
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> requestChanges(
             @PathVariable String id,
             @RequestBody AdminModificationRequestDTO modificationRequest,
-            @AuthenticationPrincipal UserEntitiy currentUser) {
+            @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
             ReservationRequestResponseDTO updatedRequest = reservationService.requestChanges(id, modificationRequest,

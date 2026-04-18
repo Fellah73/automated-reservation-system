@@ -8,7 +8,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.eval
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.ContractServicesResponseDTO;
-import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntitiy;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderContractEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Provider.ProviderType;
@@ -50,7 +50,7 @@ public interface ProviderService {
 
     // create evaluations for a provider
     ProviderEvaluationRequestDTO createEvaluationForProvider(Long providerId,
-            ProviderEvaluationRequestDTO evaluationDto, UserEntitiy currentUser);
+            ProviderEvaluationRequestDTO evaluationDto, UserEntity currentUser);
 
     // get evaluations for a provider
     ProviderEvaluationResponseDTO getEvaluationsByProvider(Long providerId);
