@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingDetailsResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingRequestDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
@@ -86,6 +87,7 @@ public class AccommodationServiceImpl implements AccommodationService {
             bookingEntity.setItems(new ArrayList<>());
 
             Double[] totalAmount = { 0.0 };
+            Double[] totalCount = { 0.0 };
 
             bookingRequestDto.getItems().forEach(itemDto -> {
                 AccommodationReservationEntity reservationEntity = new AccommodationReservationEntity();
@@ -96,12 +98,20 @@ public class AccommodationServiceImpl implements AccommodationService {
                 // calculate total amount
                 totalAmount[0] += itemDto.getCount().doubleValue() * service.getPricePerNight().doubleValue();
 
+                // calculate total count
+                totalCount[0] += itemDto.getCount().doubleValue() * service.getCapacity().doubleValue();
+
                 reservationEntity.setAccommodationService(service);
                 reservationEntity.setCount(itemDto.getCount());
                 reservationEntity.setBooking(bookingEntity);
 
                 bookingEntity.getItems().add(reservationEntity);
             });
+
+            if (reservationRequest.getParticipants().size() != totalCount[0]) {
+                throw new RuntimeException(
+                        "Total count of accommodation services doesn't match the number of participants in the reservation request");
+            }
 
             bookingEntity.setTotalAmount(totalAmount[0]);
             bookingEntity.setCheckInDate(reservationRequest.getDepartureDate().toLocalDate());
@@ -117,4 +127,113 @@ public class AccommodationServiceImpl implements AccommodationService {
         }
     }
 
+    // update booking for accommodation
+    @Override
+    @Transactional
+    public AccommodationBookingResponseDto updateBooking(Long id, AccommodationBookingRequestDto bookingRequestDto,
+            UserEntitiy currentUser) {
+        try {
+            AccommodationBookingEntity existingBooking = accommodationBookingRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Accommodation booking not found with id: " + id));
+
+            ProviderEntity provider = providerRepository.findById(bookingRequestDto.getProviderId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Provider not found with id: " + bookingRequestDto.getProviderId()));
+
+            existingBooking.setProvider(provider);
+
+            // Update the booking details based on the request DTO
+            existingBooking.setStatus(BookingStatus.PENDING);
+
+            // Clear existing items and add new ones
+            existingBooking.getItems().clear();
+            Double[] totalAmount = { 0.0 };
+            Double[] totalCount = { 0.0 };
+
+            bookingRequestDto.getItems().forEach(itemDto -> {
+                AccommodationReservationEntity reservationEntity = new AccommodationReservationEntity();
+                AccommodationServiceEntity service = accommodationServiceRepository.findById(itemDto.getServiceId())
+                        .orElseThrow(() -> new RuntimeException(
+                                "Accommodation service not found with id: " + itemDto.getServiceId()));
+
+                // calculate total amount
+                totalAmount[0] += itemDto.getCount().doubleValue() * service.getPricePerNight().doubleValue();
+
+                // calculate total count
+                totalCount[0] += itemDto.getCount().doubleValue() * service.getCapacity().doubleValue();
+
+                reservationEntity.setAccommodationService(service);
+                reservationEntity.setCount(itemDto.getCount());
+                reservationEntity.setBooking(existingBooking);
+
+                existingBooking.getItems().add(reservationEntity);
+            });
+
+            ReservationRequest reservationRequest = existingBooking.getReservationRequest();
+
+            if (reservationRequest.getParticipants().size() != totalCount[0]) {
+                throw new RuntimeException(
+                        "Total count of accommodation services doesn't match the number of participants in the reservation request");
+            }
+
+            existingBooking.setTotalAmount(totalAmount[0]);
+            existingBooking.setCheckInDate(existingBooking.getReservationRequest().getDepartureDate().toLocalDate());
+            existingBooking.setCheckOutDate(existingBooking.getReservationRequest().getReturnDate().toLocalDate());
+
+            AccommodationBookingEntity updatedBooking = accommodationBookingRepository.save(existingBooking);
+
+            // map to Dto
+            AccommodationBookingResponseDto responseDto = bookingMapper.toResponseDto(updatedBooking);
+
+            return responseDto;
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    // get booking by id
+    @Override
+    @Transactional
+    public AccommodationBookingDetailsResponseDto getBookingById(Long id, UserEntitiy currentUser) {
+        try {
+            AccommodationBookingEntity bookingEntity = accommodationBookingRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Accommodation booking not found with id: " + id));
+
+            List<AccommodationReservationEntity> reservations = bookingEntity.getItems();
+            ProviderEntity provider = bookingEntity.getProvider();
+
+            AccommodationBookingDetailsResponseDto responseDto = new AccommodationBookingDetailsResponseDto();
+            responseDto.setId(bookingEntity.getId());
+            responseDto.setStatus(bookingEntity.getStatus().name());
+            responseDto.setTotalAmount(bookingEntity.getTotalAmount());
+            responseDto.setRequestId(bookingEntity.getReservationRequest().getId());
+
+            // provider details
+            AccommodationBookingDetailsResponseDto.ProviderDetailsDto providerDetails = new AccommodationBookingDetailsResponseDto.ProviderDetailsDto();
+
+            providerDetails.setId(provider.getId());
+            providerDetails.setName(provider.getName());
+            providerDetails.setAddress(provider.getAddress());
+
+            responseDto.setProvider(providerDetails);
+
+            List<AccommodationBookingDetailsResponseDto.BookingItemDetailsDto> itemDtos = reservations.stream()
+                    .map(reservation -> {
+                        AccommodationBookingDetailsResponseDto.BookingItemDetailsDto itemDto = new AccommodationBookingDetailsResponseDto.BookingItemDetailsDto();
+                        itemDto.setReservationId(reservation.getId());
+                        itemDto.setCount(reservation.getCount());
+                        itemDto.setServiceId(reservation.getAccommodationService().getId());
+                        itemDto.setServiceName(reservation.getAccommodationService().getRoomType());
+                        itemDto.setCapacity(reservation.getAccommodationService().getCapacity());
+                        itemDto.setPricePerNight(reservation.getAccommodationService().getPricePerNight());
+                        return itemDto;
+                    })
+                    .toList();
+
+            responseDto.setItems(itemDtos);
+            return responseDto;
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 }

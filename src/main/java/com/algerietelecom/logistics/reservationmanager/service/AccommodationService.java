@@ -2,6 +2,7 @@ package com.algerietelecom.logistics.reservationmanager.service;
 
 import java.util.List;
 
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingDetailsResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingRequestDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
@@ -14,4 +15,11 @@ public interface AccommodationService {
     // create booking for accommodation
     AccommodationBookingResponseDto createBooking(AccommodationBookingRequestDto bookingRequestDto,
             UserEntitiy currentUser);
+
+    // update booking for accommodation
+    AccommodationBookingResponseDto updateBooking(Long id, AccommodationBookingRequestDto bookingRequestDto,
+            UserEntitiy currentUser);
+
+    // get booking by id
+    AccommodationBookingDetailsResponseDto getBookingById(Long id, UserEntitiy currentUser);
 }

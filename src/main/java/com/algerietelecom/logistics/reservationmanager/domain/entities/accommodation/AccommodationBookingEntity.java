@@ -53,7 +53,7 @@ public class AccommodationBookingEntity {
     private LocalDate checkOutDate;
 
     @Builder.Default
-    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL , orphanRemoval = true)
     private List<AccommodationReservationEntity> items = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -6,13 +6,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.ApiResponse;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingDetailsResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingRequestDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
@@ -29,7 +32,7 @@ public class AccommodationController {
     private final AccommodationService accommodationService;
 
     // seach hotels by city
-    @GetMapping("/search")
+    @GetMapping(path = "/search")
     public ResponseEntity<ApiResponse<List<CreateProviderDto>>> getAvailableHotels(
             @RequestParam(required = false) String city) {
         try {
@@ -52,7 +55,7 @@ public class AccommodationController {
     }
 
     // create booking for accommodation
-    @PostMapping("/create")
+    @PostMapping(path = "/create")
     public ResponseEntity<ApiResponse<AccommodationBookingResponseDto>> createBooking(
             @RequestBody AccommodationBookingRequestDto bookingRequestDto,
             @AuthenticationPrincipal UserEntitiy currentUser) {
@@ -71,6 +74,56 @@ public class AccommodationController {
                     .body(ApiResponse.<AccommodationBookingResponseDto>builder()
                             .success(false)
                             .message("Failed to create booking: " + e.getMessage())
+                            .statusCode(500)
+                            .build());
+        }
+    }
+
+    // update booking for accommodation
+    @PutMapping(path = "/{id}")
+    public ResponseEntity<ApiResponse<AccommodationBookingResponseDto>> updateBooking(
+            @PathVariable Long id,
+            @RequestBody AccommodationBookingRequestDto bookingRequestDto,
+            @AuthenticationPrincipal UserEntitiy currentUser) {
+        try {
+            AccommodationBookingResponseDto result = accommodationService.updateBooking(id, bookingRequestDto,
+                    currentUser);
+
+            return ResponseEntity.ok(ApiResponse.<AccommodationBookingResponseDto>builder()
+                    .success(true)
+                    .message("Booking updated successfully")
+                    .statusCode(200)
+                    .data(result)
+                    .build());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<AccommodationBookingResponseDto>builder()
+                            .success(false)
+                            .message("Failed to update booking: " + e.getMessage())
+                            .statusCode(500)
+                            .build());
+        }
+    }
+
+    // get booking by id
+    @GetMapping(path = "/{id}")
+    public ResponseEntity<ApiResponse<AccommodationBookingDetailsResponseDto>> getBookingById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserEntitiy currentUser) {
+        try {
+            AccommodationBookingDetailsResponseDto result = accommodationService.getBookingById(id, currentUser);
+            return ResponseEntity.ok(ApiResponse.<AccommodationBookingDetailsResponseDto>builder()
+                    .success(true)
+                    .message("Booking retrieved successfully")
+                    .statusCode(200)
+                    .data(result)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<AccommodationBookingDetailsResponseDto>builder()
+                            .success(false)
+                            .message("Failed to retrieve booking: " + e.getMessage())
                             .statusCode(500)
                             .build());
         }
