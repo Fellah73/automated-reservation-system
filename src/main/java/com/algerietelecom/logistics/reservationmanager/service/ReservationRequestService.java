@@ -54,6 +54,9 @@ public interface ReservationRequestService {
         ReservationRequestResponseDTO requestChanges(String id, AdminModificationRequestDTO modificationRequest,
                         UserEntity currentUser);
 
+        ReservationRequestResponseDTO requestAttachmentChanges(String id, AdminModificationRequestDTO modificationRequest,
+                        UserEntity currentUser);
+
         // history & audit log
         void saveHistory(ReservationHistory history);
 

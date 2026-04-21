@@ -24,6 +24,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.entities.reservati
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.HistoryAction;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest.AttachmentCategory;
 import com.algerietelecom.logistics.reservationmanager.mappers.ReservationRequestMapper;
 import com.algerietelecom.logistics.reservationmanager.repositories.reservation.ReservationAttachmentRepository;
 import com.algerietelecom.logistics.reservationmanager.repositories.reservation.ReservationHistoryRepository;
@@ -38,399 +39,454 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class ReservationRequestServiceImpl implements ReservationRequestService {
 
-    private final ReservationRequestRepository reservationRequestRepository;
-    private final ReservationAttachmentRepository attachmentRepository;
-    private final ReservationHistoryRepository historyRepository;
-    private final ReservationRequestMapper reservationMapper;
-    private final ObjectMapper objectMapper;
+        private final ReservationRequestRepository reservationRequestRepository;
+        private final ReservationAttachmentRepository attachmentRepository;
+        private final ReservationHistoryRepository historyRepository;
+        private final ReservationRequestMapper reservationMapper;
+        private final ObjectMapper objectMapper;
 
-    // reservation request history logging
-    @Override
-    @Transactional
-    public void saveHistory(ReservationHistory history) {
-        historyRepository.save(history);
-    }
-
-    // create reservation request
-    @Override
-    @Transactional
-    public ReservationRequest createRequest(ReservationRequest request, UserEntity currentUser) {
-        int year = LocalDateTime.now().getYear();
-        long total = reservationRequestRepository.count();
-        long next = total + 1;
-        String uniqueId = "R-" + year + "-" + next;
-        request.setRequestNumber(uniqueId);
-
-        request.setCreatedBy(currentUser);
-        request.setCreatedAt(LocalDateTime.now());
-        request.setUpdatedAt(LocalDateTime.now());
-        request.setStatus(ReservationStatus.PENDING);
-
-        if (request.getParticipants() != null) {
-            request.getParticipants().forEach(participant -> participant.setRequest(request));
-            request.setPeopleCount(request.getParticipants().size());
+        // reservation request history logging
+        @Override
+        @Transactional
+        public void saveHistory(ReservationHistory history) {
+                historyRepository.save(history);
         }
 
-        if (request.getPreferences() != null) {
-            request.getPreferences().setRequest(request);
+        // create reservation request
+        @Override
+        @Transactional
+        public ReservationRequest createRequest(ReservationRequest request, UserEntity currentUser) {
+                int year = LocalDateTime.now().getYear();
+                long total = reservationRequestRepository.count();
+                long next = total + 1;
+                String uniqueId = "R-" + year + "-" + next;
+                request.setRequestNumber(uniqueId);
+
+                request.setCreatedBy(currentUser);
+                request.setCreatedAt(LocalDateTime.now());
+                request.setUpdatedAt(LocalDateTime.now());
+                request.setStatus(ReservationStatus.PENDING);
+
+                if (request.getParticipants() != null) {
+                        request.getParticipants().forEach(participant -> participant.setRequest(request));
+                        request.setPeopleCount(request.getParticipants().size());
+                }
+
+                if (request.getPreferences() != null) {
+                        request.getPreferences().setRequest(request);
+                }
+
+                ReservationRequest reservationRequest = reservationRequestRepository.save(request);
+
+                // log creation in history
+                ReservationHistory history = ReservationHistory.builder()
+                                .reservationRequest(reservationRequest)
+                                .performedBy(currentUser)
+                                .action(HistoryAction.CREATION)
+                                .previousStatus(null)
+                                .newStatus(ReservationStatus.PENDING)
+                                .adminComment(request.getAdminComment())
+                                .modificationInstructions(null)
+                                .build();
+
+                saveHistory(history);
+
+                return reservationRequest;
         }
 
-        ReservationRequest reservationRequest = reservationRequestRepository.save(request);
+        // save attachments for a reservation request
+        @Override
+        @Transactional
+        public List<ReservationAttachmentDTO> saveAttachment(String id,
+                        ReservationAttachmentBatchDTO attachmentBatchDTO,
+                        UserEntity currentUser) {
 
-        // log creation in history
-        ReservationHistory history = ReservationHistory.builder()
-                .reservationRequest(reservationRequest)
-                .performedBy(currentUser)
-                .action(HistoryAction.CREATION)
-                .previousStatus(null)
-                .newStatus(ReservationStatus.PENDING)
-                .adminComment(request.getAdminComment())
-                .modificationInstructions(null)
-                .build();
+                ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
+                                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
 
-        saveHistory(history);
+                List<ReservationAttachment> attachmentsToSave = attachmentBatchDTO.getAttachments().stream()
+                                .map(dto -> ReservationAttachment.builder()
+                                                .fileName(dto.getFileName())
+                                                .fileType(dto.getFileType())
+                                                .filePath(dto.getFilePath())
+                                                .reservationRequest(reservationRequest)
+                                                .uploadedBy(currentUser)
+                                                .build())
+                                .collect(Collectors.toList());
 
-        return reservationRequest;
-    }
+                List<ReservationAttachment> savedAttachments = attachmentRepository.saveAll(attachmentsToSave);
 
-    // save attachments for a reservation request
-    @Override
-    @Transactional
-    public List<ReservationAttachmentDTO> saveAttachment(String id, ReservationAttachmentBatchDTO attachmentBatchDTO,
-            UserEntity currentUser) {
-
-        ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
-                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
-
-        List<ReservationAttachment> attachmentsToSave = attachmentBatchDTO.getAttachments().stream()
-                .map(dto -> ReservationAttachment.builder()
-                        .fileName(dto.getFileName())
-                        .fileType(dto.getFileType())
-                        .filePath(dto.getFilePath())
-                        .reservationRequest(reservationRequest)
-                        .uploadedBy(currentUser)
-                        .build())
-                .collect(Collectors.toList());
-
-        List<ReservationAttachment> savedAttachments = attachmentRepository.saveAll(attachmentsToSave);
-
-        return savedAttachments.stream()
-                .map(attachment -> reservationMapper.toAttachmentDTO(attachment))
-                .collect(Collectors.toList());
-    }
-
-    // get all my reservations
-    @Override
-    @Transactional
-    public List<ReservationRequestOverviewDTO> getMyRequests(UserEntity currentUser) {
-        List<ReservationRequest> reservationRequests = reservationRequestRepository
-                .findByCreatedByOrderByCreatedAtDesc(currentUser);
-
-        // if (reservationRequests.isEmpty()) {
-        // throw new RuntimeException("No reservation requests found");
-        // }
-
-        // convert to overview DTOs
-        List<ReservationRequestOverviewDTO> overviewReservationRequestesDTOs = reservationRequests.stream()
-                .map(reservationMapper::toOverviewDTO)
-                .collect(Collectors.toList());
-
-        return overviewReservationRequestesDTOs;
-    }
-
-    // get reservation requests stats
-    @Override
-    public ReservationRequestsStatsDTO getRequestStats() {
-        long total = reservationRequestRepository.count();
-        long pendingCount = reservationRequestRepository.countByStatus(ReservationStatus.PENDING);
-        long acceptedCount = reservationRequestRepository.countByStatus(ReservationStatus.APPROVED);
-        long rejectedCount = reservationRequestRepository.countByStatus(ReservationStatus.REJECTED);
-        long toUpdateCount = reservationRequestRepository.countByStatus(ReservationStatus.MODIFICATION_REQUESTED);
-
-        return ReservationRequestsStatsDTO.builder()
-                .totalRequests(total)
-                .pendingCount(pendingCount)
-                .acceptedCount(acceptedCount)
-                .rejectedCount(rejectedCount)
-                .toUpdateCount(toUpdateCount)
-                .build();
-    }
-
-    // get reservation request
-    @Override
-    @Transactional
-    public ReservationRequestResponseDTO getRequestById(String id) {
-        ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
-                .orElse(null);
-
-        if (reservationRequest == null) {
-            throw new RuntimeException("Reservation request not found");
+                return savedAttachments.stream()
+                                .map(attachment -> reservationMapper.toAttachmentDTO(attachment))
+                                .collect(Collectors.toList());
         }
 
-        List<ReservationAttachment> requestAttachments = attachmentRepository
-                .findByReservationRequest(reservationRequest);
+        // get all my reservations
+        @Override
+        @Transactional
+        public List<ReservationRequestOverviewDTO> getMyRequests(UserEntity currentUser) {
+                List<ReservationRequest> reservationRequests = reservationRequestRepository
+                                .findByCreatedByOrderByCreatedAtDesc(currentUser);
 
-        return reservationMapper.toResponseDTO(reservationRequest, requestAttachments);
-    }
+                // if (reservationRequests.isEmpty()) {
+                // throw new RuntimeException("No reservation requests found");
+                // }
 
-    // approve reservation request
-    @Override
-    @Transactional
-    public ReservationRequestResponseDTO approveRequest(String id, AdminCommentDTO adminCommentDTO,
-            UserEntity currentUser) {
-        ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
-                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
+                // convert to overview DTOs
+                List<ReservationRequestOverviewDTO> overviewReservationRequestesDTOs = reservationRequests.stream()
+                                .map(reservationMapper::toOverviewDTO)
+                                .collect(Collectors.toList());
 
-        if (reservationRequest.getStatus() == ReservationStatus.APPROVED) {
-            throw new RuntimeException("Approved reservation request cannot be approved again");
+                return overviewReservationRequestesDTOs;
         }
 
-        reservationRequest.setStatus(ReservationStatus.APPROVED);
-        reservationRequest.setAdminComment(adminCommentDTO.getComment());
-        reservationRequest.setUpdatedAt(LocalDateTime.now());
+        // get reservation requests stats
+        @Override
+        public ReservationRequestsStatsDTO getRequestStats() {
+                long total = reservationRequestRepository.count();
+                long pendingCount = reservationRequestRepository.countByStatus(ReservationStatus.PENDING);
+                long acceptedCount = reservationRequestRepository.countByStatus(ReservationStatus.APPROVED);
+                long rejectedCount = reservationRequestRepository.countByStatus(ReservationStatus.REJECTED);
+                long toUpdateCount = reservationRequestRepository
+                                .countByStatus(ReservationStatus.MODIFICATION_REQUESTED);
 
-        ReservationRequest updatedRequest = reservationRequestRepository.save(reservationRequest);
-
-        // log approval in history
-        ReservationHistory history = ReservationHistory.builder()
-                .reservationRequest(updatedRequest)
-                .performedBy(currentUser)
-                .action(HistoryAction.APPROVAL)
-                .previousStatus(ReservationStatus.PENDING)
-                .newStatus(ReservationStatus.APPROVED)
-                .adminComment(adminCommentDTO.getComment())
-                .modificationInstructions(null)
-                .build();
-
-        saveHistory(history);
-
-        List<ReservationAttachment> requestAttachments = attachmentRepository.findByReservationRequest(updatedRequest);
-
-        return reservationMapper.toResponseDTO(updatedRequest, requestAttachments);
-    }
-
-    // reject reservation request
-    @Override
-    @Transactional
-    public ReservationRequestResponseDTO rejectRequest(String id, AdminCommentDTO adminCommentDTO,
-            UserEntity currentUser) {
-        ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
-                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
-
-        if (reservationRequest.getStatus() == ReservationStatus.REJECTED) {
-            throw new RuntimeException("Rejected reservation request cannot be rejected again");
+                return ReservationRequestsStatsDTO.builder()
+                                .totalRequests(total)
+                                .pendingCount(pendingCount)
+                                .acceptedCount(acceptedCount)
+                                .rejectedCount(rejectedCount)
+                                .toUpdateCount(toUpdateCount)
+                                .build();
         }
 
-        reservationRequest.setStatus(ReservationStatus.REJECTED);
-        reservationRequest.setAdminComment(adminCommentDTO.getComment());
-        reservationRequest.setUpdatedAt(LocalDateTime.now());
+        // get reservation request
+        @Override
+        @Transactional
+        public ReservationRequestResponseDTO getRequestById(String id) {
+                ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
+                                .orElse(null);
 
-        ReservationRequest updatedRequest = reservationRequestRepository.save(reservationRequest);
+                if (reservationRequest == null) {
+                        throw new RuntimeException("Reservation request not found");
+                }
 
-        List<ReservationAttachment> requestAttachments = attachmentRepository.findByReservationRequest(updatedRequest);
+                List<ReservationAttachment> requestAttachments = attachmentRepository
+                                .findByReservationRequest(reservationRequest);
 
-        // log rejection in history
-        ReservationHistory history = ReservationHistory.builder()
-                .reservationRequest(updatedRequest)
-                .performedBy(currentUser)
-                .action(HistoryAction.REJECTION)
-                .previousStatus(ReservationStatus.PENDING)
-                .newStatus(ReservationStatus.REJECTED)
-                .adminComment(adminCommentDTO.getComment())
-                .modificationInstructions(null)
-                .build();
-
-        saveHistory(history);
-
-        return reservationMapper.toResponseDTO(updatedRequest, requestAttachments);
-    }
-
-    // request changes for a reservation request
-    @Override
-    @Transactional
-    public ReservationRequestResponseDTO requestChanges(String id, AdminModificationRequestDTO modificationRequest,
-            UserEntity currentUser) {
-        ReservationRequest request = reservationRequestRepository.findByRequestNumber(id)
-                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
-
-        if (request.getStatus() == ReservationStatus.APPROVED) {
-            throw new RuntimeException("Approved reservation request cannot be modified");
+                return reservationMapper.toResponseDTO(reservationRequest, requestAttachments);
         }
 
-        try {
-            String jsonInstructions = objectMapper.writeValueAsString(modificationRequest);
+        // approve reservation request
+        @Override
+        @Transactional
+        public ReservationRequestResponseDTO approveRequest(String id, AdminCommentDTO adminCommentDTO,
+                        UserEntity currentUser) {
+                ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
+                                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
 
-            request.setStatus(ReservationStatus.MODIFICATION_REQUESTED);
-            request.setModificationInstructions(jsonInstructions);
-            request.setAdminComment(modificationRequest.getGlobalComment());
+                if (reservationRequest.getStatus() == ReservationStatus.APPROVED) {
+                        throw new RuntimeException("Approved reservation request cannot be approved again");
+                }
 
-            ReservationRequest reservationRequest = reservationRequestRepository.save(request);
+                reservationRequest.setStatus(ReservationStatus.APPROVED);
+                reservationRequest.setAdminComment(adminCommentDTO.getComment());
+                reservationRequest.setUpdatedAt(LocalDateTime.now());
 
-            // log modification request in history
-            ReservationHistory history = ReservationHistory.builder()
-                    .reservationRequest(reservationRequest)
-                    .performedBy(currentUser)
-                    .action(HistoryAction.MODIFICATION_REQUESTED)
-                    .previousStatus(ReservationStatus.PENDING)
-                    .newStatus(ReservationStatus.MODIFICATION_REQUESTED)
-                    .adminComment(modificationRequest.getGlobalComment())
-                    .modificationInstructions(jsonInstructions)
-                    .build();
+                ReservationRequest updatedRequest = reservationRequestRepository.save(reservationRequest);
 
-            saveHistory(history);
+                // log approval in history
+                ReservationHistory history = ReservationHistory.builder()
+                                .reservationRequest(updatedRequest)
+                                .performedBy(currentUser)
+                                .action(HistoryAction.APPROVAL)
+                                .previousStatus(ReservationStatus.PENDING)
+                                .newStatus(ReservationStatus.APPROVED)
+                                .adminComment(adminCommentDTO.getComment())
+                                .modificationInstructions(null)
+                                .build();
 
-            return reservationMapper.toResponseDTO(reservationRequest, null);
-        } catch (Exception e) {
-            throw new RuntimeException("Error processing request", e);
-        }
-    }
+                saveHistory(history);
 
-    // get reservation request history
-    @Override
-    @Transactional
-    public List<ReservationHistoryResponseDTO> getReservationRequestHistory(String requestId) {
-        ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(requestId)
-                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
+                List<ReservationAttachment> requestAttachments = attachmentRepository
+                                .findByReservationRequest(updatedRequest);
 
-        try {
-
-            List<ReservationHistory> history = historyRepository.findByReservationRequestId(reservationRequest.getId());
-
-            List<ReservationHistoryResponseDTO> responseDTOs = history.stream()
-                    .map(reservationMapper::toHistoryResponseDTO)
-                    .collect(Collectors.toList());
-
-            return responseDTOs;
-        } catch (Exception e) {
-            throw new RuntimeException("Error retrieving reservation request history: " + e.getMessage());
-        }
-    }
-
-    // get global audit log
-    @Override
-    @Transactional
-    public Page<ReservationWithHistoryResponseDTO> getGlobalAuditLog(Pageable pageable) {
-        Page<ReservationRequest> reservationRequestsHistory = reservationRequestRepository
-                .findAll(pageable);
-
-        if (reservationRequestsHistory.isEmpty()) {
-            throw new RuntimeException("No audit log entries found");
+                return reservationMapper.toResponseDTO(updatedRequest, requestAttachments);
         }
 
-        // convert to response DTOs
-        Page<ReservationWithHistoryResponseDTO> responseDTO = reservationRequestsHistory
-                .map(reservationMapper::toWithHistoryResponseDTO);
+        // reject reservation request
+        @Override
+        @Transactional
+        public ReservationRequestResponseDTO rejectRequest(String id, AdminCommentDTO adminCommentDTO,
+                        UserEntity currentUser) {
+                ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
+                                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
 
-        return responseDTO;
-    }
+                if (reservationRequest.getStatus() == ReservationStatus.REJECTED) {
+                        throw new RuntimeException("Rejected reservation request cannot be rejected again");
+                }
 
-    // update reservation request
-    @Override
-    @Transactional
-    public ReservationRequestResponseDTO updateRequest(String id, ReservationRequestUpdateDTO updateDTO,
-            UserEntity currentUser) {
-        ReservationRequest request = reservationRequestRepository.findByRequestNumber(id)
-                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
+                reservationRequest.setStatus(ReservationStatus.REJECTED);
+                reservationRequest.setAdminComment(adminCommentDTO.getComment());
+                reservationRequest.setUpdatedAt(LocalDateTime.now());
 
-        if (request.getStatus() == ReservationStatus.APPROVED) {
-            throw new RuntimeException("Approved reservation request cannot be modified");
+                ReservationRequest updatedRequest = reservationRequestRepository.save(reservationRequest);
+
+                List<ReservationAttachment> requestAttachments = attachmentRepository
+                                .findByReservationRequest(updatedRequest);
+
+                // log rejection in history
+                ReservationHistory history = ReservationHistory.builder()
+                                .reservationRequest(updatedRequest)
+                                .performedBy(currentUser)
+                                .action(HistoryAction.REJECTION)
+                                .previousStatus(ReservationStatus.PENDING)
+                                .newStatus(ReservationStatus.REJECTED)
+                                .adminComment(adminCommentDTO.getComment())
+                                .modificationInstructions(null)
+                                .build();
+
+                saveHistory(history);
+
+                return reservationMapper.toResponseDTO(updatedRequest, requestAttachments);
         }
 
-        try {
-            request.setReason(updateDTO.getReason() != null ? updateDTO.getReason() : request.getReason());
-            request.setDepartureDate(
-                    updateDTO.getDepartureDate() != null ? updateDTO.getDepartureDate() : request.getDepartureDate());
-            request.setReturnDate(
-                    updateDTO.getReturnDate() != null ? updateDTO.getReturnDate() : request.getReturnDate());
-            request.setDestination(
-                    updateDTO.getDestination() != null ? updateDTO.getDestination() : request.getDestination());
+        // request changes for a reservation request
+        @Override
+        @Transactional
+        public ReservationRequestResponseDTO requestChanges(String id, AdminModificationRequestDTO modificationRequest,
+                        UserEntity currentUser) {
+                ReservationRequest request = reservationRequestRepository.findByRequestNumber(id)
+                                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
 
-            if (updateDTO.getPreferences() != null && request.getPreferences() != null) {
-                request.getPreferences().setHotelPreference(updateDTO.getPreferences().getHotelPreference());
-                request.getPreferences().setTransportType(updateDTO.getPreferences().getTransportType());
-            }
+                if (request.getStatus() == ReservationStatus.APPROVED) {
+                        throw new RuntimeException("Approved reservation request cannot be modified");
+                }
 
-            if (updateDTO.getParticipants() != null) {
-                // clear existing participants
-                request.getParticipants().clear();
+                try {
+                        String jsonInstructions = objectMapper.writeValueAsString(modificationRequest);
 
-                // add new participants
-                updateDTO.getParticipants().forEach(participantDTO -> {
-                    request.getParticipants().add(reservationMapper.toParticipantEntity(participantDTO, request));
-                });
+                        request.setStatus(ReservationStatus.MODIFICATION_REQUESTED);
+                        request.setModificationInstructions(jsonInstructions);
+                        request.setAdminComment(modificationRequest.getGlobalComment());
 
-                // count participants
-                request.setPeopleCount(request.getParticipants().size());
-            }
+                        ReservationRequest reservationRequest = reservationRequestRepository.save(request);
 
-            request.setUpdatedAt(LocalDateTime.now());
+                        // log modification request in history
+                        ReservationHistory history = ReservationHistory.builder()
+                                        .reservationRequest(reservationRequest)
+                                        .performedBy(currentUser)
+                                        .action(HistoryAction.MODIFICATION_REQUESTED)
+                                        .previousStatus(ReservationStatus.PENDING)
+                                        .newStatus(ReservationStatus.MODIFICATION_REQUESTED)
+                                        .adminComment(modificationRequest.getGlobalComment())
+                                        .modificationInstructions(jsonInstructions)
+                                        .build();
 
-            ReservationRequest updatedRequest = reservationRequestRepository.save(request);
+                        saveHistory(history);
 
-            List<ReservationAttachment> requestAttachments = attachmentRepository
-                    .findByReservationRequest(updatedRequest);
-
-            // log in history
-            ReservationHistory history = ReservationHistory.builder()
-                    .reservationRequest(updatedRequest)
-                    .performedBy(currentUser)
-                    .action(HistoryAction.UPDATE)
-                    .previousStatus(request.getStatus())
-                    .newStatus(ReservationStatus.PENDING)
-                    .adminComment(null)
-                    .modificationInstructions("Details updated by user")
-                    .build();
-
-            saveHistory(history);
-
-            return reservationMapper.toResponseDTO(updatedRequest, requestAttachments);
-        } catch (Exception e) {
-            throw new RuntimeException("Error updating reservation request", e);
+                        return reservationMapper.toResponseDTO(reservationRequest, null);
+                } catch (Exception e) {
+                        throw new RuntimeException("Error processing request", e);
+                }
         }
-    }
 
-    // save attachments for a reservation request
-    @Override
-    @Transactional
-    public List<ReservationAttachmentDTO> updateAttachment(String id, ReservationAttachmentBatchDTO attachmentBatchDTO,
-            UserEntity currentUser) {
+        // request attachment changes for a reservation request
+        @Override
+        @Transactional
+        public ReservationRequestResponseDTO requestAttachmentChanges(String id,
+                        AdminModificationRequestDTO modificationRequest,
+                        UserEntity currentUser) {
+                ReservationRequest request = reservationRequestRepository.findByRequestNumber(id)
+                                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
 
-        ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
-                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
+                if (request.getStatus() == ReservationStatus.APPROVED) {
+                        throw new RuntimeException("Approved reservation request cannot be modified");
+                }
 
-        // clear reservation request attachments
-        reservationRequest.getAttachments().clear();
+                try {
+                        String jsonInstructions = objectMapper.writeValueAsString(modificationRequest);
 
-        List<ReservationAttachment> attachmentsToUpdate = attachmentBatchDTO.getAttachments().stream()
-                .map(dto -> ReservationAttachment.builder()
-                        .fileName(dto.getFileName())
-                        .fileType(dto.getFileType())
-                        .filePath(dto.getFilePath())
-                        .reservationRequest(reservationRequest)
-                        .uploadedBy(currentUser)
-                        .build())
-                .collect(Collectors.toList());
+                        request.setStatus(ReservationStatus.MODIFICATION_REQUESTED);
+                        request.setModificationAttachmentInstructions(jsonInstructions);
+                        request.setAdminComment(modificationRequest.getGlobalComment());
 
-        List<ReservationAttachment> updatedAttachments = attachmentRepository.saveAll(attachmentsToUpdate);
+                        ReservationRequest reservationRequest = reservationRequestRepository.save(request);
 
-        // log in history
-        ReservationHistory history = ReservationHistory.builder()
-                .reservationRequest(reservationRequest)
-                .performedBy(currentUser)
-                .action(HistoryAction.UPDATE)
-                .previousStatus(reservationRequest.getStatus())
-                .newStatus(ReservationStatus.PENDING)
-                .adminComment(null)
-                .modificationInstructions("Attachments updated by user")
-                .build();
+                        // log modification request in history
+                        ReservationHistory history = ReservationHistory.builder()
+                                        .reservationRequest(reservationRequest)
+                                        .performedBy(currentUser)
+                                        .action(HistoryAction.MODIFICATION_REQUESTED)
+                                        .previousStatus(ReservationStatus.PENDING)
+                                        .newStatus(ReservationStatus.MODIFICATION_REQUESTED)
+                                        .adminComment(modificationRequest.getGlobalComment())
+                                        .modificationInstructions(jsonInstructions)
+                                        .build();
 
-        saveHistory(history);
+                        saveHistory(history);
 
-        // convert to DTOs
-        List<ReservationAttachmentDTO> updatedAttachmentDTOs = updatedAttachments.stream()
-                .map(attachment -> reservationMapper.toAttachmentDTO(attachment))
-                .collect(Collectors.toList());
+                        return reservationMapper.toResponseDTO(reservationRequest, null);
+                } catch (Exception e) {
+                        throw new RuntimeException("Error processing request", e);
+                }
+        }
 
-        return updatedAttachmentDTOs;
-    }
+        // get reservation request history
+        @Override
+        @Transactional
+        public List<ReservationHistoryResponseDTO> getReservationRequestHistory(String requestId) {
+                ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(requestId)
+                                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
+
+                try {
+
+                        List<ReservationHistory> history = historyRepository
+                                        .findByReservationRequestId(reservationRequest.getId());
+
+                        List<ReservationHistoryResponseDTO> responseDTOs = history.stream()
+                                        .map(reservationMapper::toHistoryResponseDTO)
+                                        .collect(Collectors.toList());
+
+                        return responseDTOs;
+                } catch (Exception e) {
+                        throw new RuntimeException("Error retrieving reservation request history: " + e.getMessage());
+                }
+        }
+
+        // get global audit log
+        @Override
+        @Transactional
+        public Page<ReservationWithHistoryResponseDTO> getGlobalAuditLog(Pageable pageable) {
+                Page<ReservationRequest> reservationRequestsHistory = reservationRequestRepository
+                                .findAll(pageable);
+
+                if (reservationRequestsHistory.isEmpty()) {
+                        throw new RuntimeException("No audit log entries found");
+                }
+
+                // convert to response DTOs
+                Page<ReservationWithHistoryResponseDTO> responseDTO = reservationRequestsHistory
+                                .map(reservationMapper::toWithHistoryResponseDTO);
+
+                return responseDTO;
+        }
+
+        // update reservation request
+        @Override
+        @Transactional
+        public ReservationRequestResponseDTO updateRequest(String id, ReservationRequestUpdateDTO updateDTO,
+                        UserEntity currentUser) {
+                ReservationRequest request = reservationRequestRepository.findByRequestNumber(id)
+                                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
+
+                if (request.getStatus() == ReservationStatus.APPROVED) {
+                        throw new RuntimeException("Approved reservation request cannot be modified");
+                }
+
+                try {
+                        request.setReason(updateDTO.getReason() != null ? updateDTO.getReason() : request.getReason());
+                        request.setDepartureDate(
+                                        updateDTO.getDepartureDate() != null ? updateDTO.getDepartureDate()
+                                                        : request.getDepartureDate());
+                        request.setReturnDate(
+                                        updateDTO.getReturnDate() != null ? updateDTO.getReturnDate()
+                                                        : request.getReturnDate());
+                        request.setDestination(
+                                        updateDTO.getDestination() != null ? updateDTO.getDestination()
+                                                        : request.getDestination());
+
+                        if (updateDTO.getPreferences() != null && request.getPreferences() != null) {
+                                request.getPreferences()
+                                                .setHotelPreference(updateDTO.getPreferences().getHotelPreference());
+                                request.getPreferences()
+                                                .setTransportType(updateDTO.getPreferences().getTransportType());
+                        }
+
+                        if (updateDTO.getParticipants() != null) {
+                                // clear existing participants
+                                request.getParticipants().clear();
+
+                                // add new participants
+                                updateDTO.getParticipants().forEach(participantDTO -> {
+                                        request.getParticipants().add(
+                                                        reservationMapper.toParticipantEntity(participantDTO, request));
+                                });
+
+                                // count participants
+                                request.setPeopleCount(request.getParticipants().size());
+                        }
+
+                        request.setUpdatedAt(LocalDateTime.now());
+                        request.setStatus(ReservationStatus.PENDING);
+
+                        ReservationRequest updatedRequest = reservationRequestRepository.save(request);
+
+                        List<ReservationAttachment> requestAttachments = attachmentRepository
+                                        .findByReservationRequest(updatedRequest);
+
+                        // log in history
+                        ReservationHistory history = ReservationHistory.builder()
+                                        .reservationRequest(updatedRequest)
+                                        .performedBy(currentUser)
+                                        .action(HistoryAction.UPDATE)
+                                        .previousStatus(request.getStatus())
+                                        .newStatus(ReservationStatus.PENDING)
+                                        .adminComment(null)
+                                        .modificationInstructions("Details updated by user")
+                                        .build();
+
+                        saveHistory(history);
+
+                        return reservationMapper.toResponseDTO(updatedRequest, requestAttachments);
+                } catch (Exception e) {
+                        throw new RuntimeException("Error updating reservation request", e);
+                }
+        }
+
+        // save attachments for a reservation request
+        @Override
+        @Transactional
+        public List<ReservationAttachmentDTO> updateAttachment(String id,
+                        ReservationAttachmentBatchDTO attachmentBatchDTO,
+                        UserEntity currentUser) {
+
+                ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
+                                .orElseThrow(() -> new RuntimeException("Reservation request not found"));
+
+                // clear reservation request attachments
+                reservationRequest.getAttachments().clear();
+
+                List<ReservationAttachment> attachmentsToUpdate = attachmentBatchDTO.getAttachments().stream()
+                                .map(dto -> ReservationAttachment.builder()
+                                                .fileName(dto.getFileName())
+                                                .fileType(dto.getFileType())
+                                                .filePath(dto.getFilePath())
+                                                .category(AttachmentCategory.valueOf(dto.getCategory()))
+                                                .reservationRequest(reservationRequest)
+                                                .uploadedBy(currentUser)
+                                                .build())
+                                .collect(Collectors.toList());
+
+                List<ReservationAttachment> updatedAttachments = attachmentRepository.saveAll(attachmentsToUpdate);
+
+                // log in history
+                ReservationHistory history = ReservationHistory.builder()
+                                .reservationRequest(reservationRequest)
+                                .performedBy(currentUser)
+                                .action(HistoryAction.UPDATE)
+                                .previousStatus(reservationRequest.getStatus())
+                                .newStatus(ReservationStatus.PENDING)
+                                .adminComment(null)
+                                .modificationInstructions("Attachments updated by user")
+                                .build();
+
+                saveHistory(history);
+
+                // convert to DTOs
+                List<ReservationAttachmentDTO> updatedAttachmentDTOs = updatedAttachments.stream()
+                                .map(attachment -> reservationMapper.toAttachmentDTO(attachment))
+                                .collect(Collectors.toList());
+
+                return updatedAttachmentDTOs;
+        }
 }

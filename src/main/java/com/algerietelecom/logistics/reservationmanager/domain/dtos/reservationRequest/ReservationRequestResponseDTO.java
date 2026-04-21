@@ -14,6 +14,8 @@ public class ReservationRequestResponseDTO {
     private LocalDateTime departureDate;
     private LocalDateTime returnDate;
     private String status;
+    private String modificationInstructions;
+    private String modificationAttachmentInstructions;
     private List<ParticipantResponseDTO> participants;
     private PreferenceResponseDTO preferences;
     private List<ReservationAttachmentDTO> attachments;
@@ -40,5 +42,5 @@ public class ReservationRequestResponseDTO {
     public void setAttachments(List<ReservationAttachmentDTO> attachments) {
         this.attachments = attachments;
     }
-   
+
 }

@@ -12,5 +12,6 @@ import lombok.NoArgsConstructor;
 public class ReservationAttachmentDTO {
     private String fileName;
     private String fileType;
-    private String filePath; 
+    private String filePath;
+    private String category;
 }

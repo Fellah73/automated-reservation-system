@@ -75,6 +75,9 @@ public class ReservationRequest {
 
     @Column(columnDefinition = "TEXT")
     private String modificationInstructions;
+    
+    @Column(columnDefinition = "TEXT")
+    private String modificationAttachmentInstructions;
 
     // relations
     @Builder.Default

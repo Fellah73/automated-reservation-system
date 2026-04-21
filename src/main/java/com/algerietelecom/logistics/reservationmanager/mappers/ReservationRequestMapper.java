@@ -85,6 +85,8 @@ public class ReservationRequestMapper {
         dto.setDepartureDate(entity.getDepartureDate());
         dto.setReturnDate(entity.getReturnDate());
         dto.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
+        dto.setModificationInstructions(entity.getModificationInstructions());
+        dto.setModificationAttachmentInstructions(entity.getModificationAttachmentInstructions());
 
         if (entity.getParticipants() != null) {
             dto.setParticipants(entity.getParticipants().stream().map(p -> {
@@ -110,11 +112,12 @@ public class ReservationRequestMapper {
         }
 
         if (requestAttachments != null) {
-            dto.setAttachments((List) requestAttachments.stream().map(att -> {
+            dto.setAttachments(requestAttachments.stream().map(att -> {
                 ReservationAttachmentDTO attDto = new ReservationAttachmentDTO();
                 attDto.setFileName(att.getFileName());
                 attDto.setFileType(att.getFileType());
                 attDto.setFilePath(att.getFilePath());
+                attDto.setCategory(att.getCategory() != null ? att.getCategory().name() : null);
                 return attDto;
             }).collect(Collectors.toList()));
         }
@@ -135,6 +138,8 @@ public class ReservationRequestMapper {
         dto.setDepartureDate(entity.getDepartureDate());
         dto.setReturnDate(entity.getReturnDate());
         dto.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
+        dto.setModificationInstructions(entity.getModificationInstructions());
+        dto.setModificationAttachmentInstructions(entity.getModificationAttachmentInstructions());
 
         if (entity.getParticipants() != null) {
             dto.setPeopleCount(entity.getParticipants().size());
@@ -151,6 +156,7 @@ public class ReservationRequestMapper {
         dto.setFileName(entity.getFileName());
         dto.setFileType(entity.getFileType());
         dto.setFilePath(entity.getFilePath());
+        dto.setCategory(entity.getCategory() != null ? entity.getCategory().name() : null);
 
         return dto;
     }

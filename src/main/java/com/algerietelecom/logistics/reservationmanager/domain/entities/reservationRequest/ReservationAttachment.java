@@ -5,6 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest.AttachmentCategory;
 
 @Entity
 @Table(name = "reservation_attachments")
@@ -26,6 +27,11 @@ public class ReservationAttachment {
     private String fileName;
     private String filePath;
     private String fileType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AttachmentCategory category;
+
     @Column(updatable = false)
     private LocalDateTime uploadedAt;
 

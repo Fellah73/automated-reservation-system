@@ -313,6 +313,31 @@ public class ReservationRequestController {
         }
     }
 
+    // request update on reservation request attachments
+    @PatchMapping(path = "/{id}/request-changes/attachments")
+    public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> requestAttachmentChanges(
+            @PathVariable String id,
+            @RequestBody AdminModificationRequestDTO modificationRequest,
+            @AuthenticationPrincipal UserEntity currentUser) {
+
+        try {
+            ReservationRequestResponseDTO updatedRequest = reservationService.requestAttachmentChanges(id, modificationRequest,
+                    currentUser);
+
+            return ResponseEntity.ok(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(true)
+                    .message("Requested changes on reservation request attachments successfully")
+                    .data(updatedRequest)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<ReservationRequestResponseDTO>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
+    }
+
     // get reservation request history
     @GetMapping(path = "/{id}/history")
     public ResponseEntity<ApiResponse<List<ReservationHistoryResponseDTO>>> getRequestHistory(@PathVariable String id) {

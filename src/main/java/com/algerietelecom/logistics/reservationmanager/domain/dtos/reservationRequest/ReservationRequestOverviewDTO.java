@@ -14,5 +14,7 @@ public class ReservationRequestOverviewDTO {
     private LocalDateTime returnDate;
     private String status;
     private Integer peopleCount;
+    private String modificationInstructions;
+    private String modificationAttachmentInstructions;
 
 }
