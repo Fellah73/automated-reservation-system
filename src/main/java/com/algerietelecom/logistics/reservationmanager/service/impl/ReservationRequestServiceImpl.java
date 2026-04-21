@@ -109,6 +109,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                                                 .fileName(dto.getFileName())
                                                 .fileType(dto.getFileType())
                                                 .filePath(dto.getFilePath())
+                                                .category(AttachmentCategory.valueOf(dto.getCategory()))
                                                 .reservationRequest(reservationRequest)
                                                 .uploadedBy(currentUser)
                                                 .build())
@@ -417,7 +418,11 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                         }
 
                         request.setUpdatedAt(LocalDateTime.now());
-                        request.setStatus(ReservationStatus.PENDING);
+                        request.setModificationInstructions(null);
+
+                        if (request.getModificationAttachmentInstructions() == null) {
+                                request.setStatus(ReservationStatus.PENDING);
+                        }
 
                         ReservationRequest updatedRequest = reservationRequestRepository.save(request);
 
@@ -466,6 +471,14 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                                                 .uploadedBy(currentUser)
                                                 .build())
                                 .collect(Collectors.toList());
+
+                reservationRequest.setModificationAttachmentInstructions(null);
+
+                if (reservationRequest.getModificationInstructions() == null) {
+                        reservationRequest.setStatus(ReservationStatus.PENDING);
+                }
+
+                ReservationRequest updatedRequest = reservationRequestRepository.save(reservationRequest);
 
                 List<ReservationAttachment> updatedAttachments = attachmentRepository.saveAll(attachmentsToUpdate);
 
