@@ -11,4 +11,5 @@ public class ReservationRequestsStatsDTO {
     private long acceptedCount;
     private long rejectedCount;
     private long toUpdateCount;
+    private long urgentCount;
 }

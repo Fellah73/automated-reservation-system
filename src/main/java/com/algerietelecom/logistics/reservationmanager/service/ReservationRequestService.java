@@ -44,8 +44,11 @@ public interface ReservationRequestService {
         ReservationRequestsStatsDTO getRequestStats();
 
         // admin operations
+        // retrieval all requests
+        Page<ReservationRequestOverviewDTO> getAllRequests(Pageable pageable);
+
         // approve, reject, request changes
-        ReservationRequestResponseDTO approveRequest(String id, AdminCommentDTO adminCommentDTO,
+        ReservationRequestResponseDTO approveRequest(String id,
                         UserEntity currentUser);
 
         ReservationRequestResponseDTO rejectRequest(String id, AdminCommentDTO adminCommentDTO,

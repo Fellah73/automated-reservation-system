@@ -1,8 +1,12 @@
 package com.algerietelecom.logistics.reservationmanager.repositories.reservation;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,5 +36,9 @@ public interface ReservationRequestRepository extends JpaRepository<ReservationR
     boolean existsByRequestNumber(String requestNumber);
 
     long countByStatus(ReservationStatus status);
+
+    Page<ReservationRequest> findAllFilterByStatus(Pageable pageable, ReservationStatus status);
+
+    long countByDepartureDateLessThan(LocalDateTime threeDaysLater);
 
 }

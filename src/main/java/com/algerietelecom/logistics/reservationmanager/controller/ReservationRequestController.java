@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.ApiResponse;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.AdminCommentDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.AdminModificationRequestDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ApproverReservationRequestOverviewApiResponse;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentBatchDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationAttachmentDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest.ReservationHistoryResponseDTO;
@@ -220,10 +221,40 @@ public class ReservationRequestController {
     }
 
     // admin routes
+
+    // get all reservation requests with pagination
+    @GetMapping(path = "/all")
+    public ResponseEntity<ApiResponse<ApproverReservationRequestOverviewApiResponse>> getAllReservations(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        try {
+            Page<ReservationRequestOverviewDTO> reservationRequests = reservationService.getAllRequests(pageable);
+
+            // get their stats
+            ReservationRequestsStatsDTO stats = reservationService.getRequestStats();
+
+            ApproverReservationRequestOverviewApiResponse response = new ApproverReservationRequestOverviewApiResponse();
+            response.setReservationRequests(reservationRequests);
+            response.setStats(stats);
+
+            return ResponseEntity.ok(ApiResponse.<ApproverReservationRequestOverviewApiResponse>builder()
+                    .success(true)
+                    .message("All reservation requests retrieved successfully")
+                    .statusCode(200)
+                    .data(response)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.<ApproverReservationRequestOverviewApiResponse>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
+    }
+
     // approve reservation request
     @PatchMapping(path = "/{id}/approve")
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> approveRequest(@PathVariable String id,
-            @RequestBody AdminCommentDTO adminCommentDTO,
             @AuthenticationPrincipal UserEntity currentUser) {
         try {
             if (id == null || id.isEmpty()) {
@@ -235,7 +266,7 @@ public class ReservationRequestController {
             }
 
             // approve reservation request
-            ReservationRequestResponseDTO approvedRequest = reservationService.approveRequest(id, adminCommentDTO,
+            ReservationRequestResponseDTO approvedRequest = reservationService.approveRequest(id,
                     currentUser);
 
             return ResponseEntity.ok(ApiResponse.<ReservationRequestResponseDTO>builder()
@@ -321,7 +352,8 @@ public class ReservationRequestController {
             @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
-            ReservationRequestResponseDTO updatedRequest = reservationService.requestAttachmentChanges(id, modificationRequest,
+            ReservationRequestResponseDTO updatedRequest = reservationService.requestAttachmentChanges(id,
+                    modificationRequest,
                     currentUser);
 
             return ResponseEntity.ok(ApiResponse.<ReservationRequestResponseDTO>builder()

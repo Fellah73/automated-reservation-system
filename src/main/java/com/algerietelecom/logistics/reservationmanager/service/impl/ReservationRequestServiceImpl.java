@@ -151,12 +151,15 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                 long toUpdateCount = reservationRequestRepository
                                 .countByStatus(ReservationStatus.MODIFICATION_REQUESTED);
 
+                long urgentCount = reservationRequestRepository
+                                .countByDepartureDateLessThan(LocalDateTime.now().plusDays(3));
                 return ReservationRequestsStatsDTO.builder()
                                 .totalRequests(total)
                                 .pendingCount(pendingCount)
                                 .acceptedCount(acceptedCount)
                                 .rejectedCount(rejectedCount)
                                 .toUpdateCount(toUpdateCount)
+                                .urgentCount(urgentCount)
                                 .build();
         }
 
@@ -177,10 +180,29 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                 return reservationMapper.toResponseDTO(reservationRequest, requestAttachments);
         }
 
+        // approver routes
+        // get all reservation requests
+        @Override
+        @Transactional
+        public Page<ReservationRequestOverviewDTO> getAllRequests(Pageable pageable) {
+                Page<ReservationRequest> reservationRequests = reservationRequestRepository
+                                .findAllFilterByStatus(pageable, ReservationStatus.PENDING);
+
+                if (reservationRequests.isEmpty()) {
+                        throw new RuntimeException("No reservation requests found");
+                }
+
+                // convert to overview DTOs
+                Page<ReservationRequestOverviewDTO> overviewDTOs = reservationRequests
+                                .map(reservationMapper::toOverviewDTO);
+
+                return overviewDTOs;
+        }
+
         // approve reservation request
         @Override
         @Transactional
-        public ReservationRequestResponseDTO approveRequest(String id, AdminCommentDTO adminCommentDTO,
+        public ReservationRequestResponseDTO approveRequest(String id,
                         UserEntity currentUser) {
                 ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(id)
                                 .orElseThrow(() -> new RuntimeException("Reservation request not found"));
@@ -190,7 +212,6 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                 }
 
                 reservationRequest.setStatus(ReservationStatus.APPROVED);
-                reservationRequest.setAdminComment(adminCommentDTO.getComment());
                 reservationRequest.setUpdatedAt(LocalDateTime.now());
 
                 ReservationRequest updatedRequest = reservationRequestRepository.save(reservationRequest);
@@ -202,7 +223,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                                 .action(HistoryAction.APPROVAL)
                                 .previousStatus(ReservationStatus.PENDING)
                                 .newStatus(ReservationStatus.APPROVED)
-                                .adminComment(adminCommentDTO.getComment())
+                                .adminComment(updatedRequest.getAdminComment())
                                 .modificationInstructions(null)
                                 .build();
 
