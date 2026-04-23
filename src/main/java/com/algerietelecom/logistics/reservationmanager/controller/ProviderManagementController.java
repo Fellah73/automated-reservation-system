@@ -1,7 +1,5 @@
 package com.algerietelecom.logistics.reservationmanager.controller;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -74,6 +72,29 @@ public class ProviderManagementController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<CreateProviderDto>builder()
                     .success(false)
                     .message("Failed to create provider: " + e.getMessage())
+                    .statusCode(500)
+                    .build());
+        }
+    }
+
+    // retrieve a provider by id
+    @GetMapping(path = "/{id}")
+    public ResponseEntity<ApiResponse<ProviderDto>> getProviderById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserEntity currentUser) {
+
+        try {
+            ProviderDto provider = providerService.getProviderById(id);
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<ProviderDto>builder()
+                    .success(true)
+                    .message("Provider retrieved successfully")
+                    .statusCode(200)
+                    .data(provider)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.<ProviderDto>builder()
+                    .success(false)
+                    .message("Failed to retrieve provider: " + e.getMessage())
                     .statusCode(500)
                     .build());
         }
@@ -162,7 +183,7 @@ public class ProviderManagementController {
 
         try {
             Page<ProviderDto> providers = providerService.getAllProviders(type, pageable);
-            
+
             ProviderStatsDTO stats = providerService.getRequestStats();
 
             ProvidersOverviewApiResponse response = new ProvidersOverviewApiResponse();
@@ -266,10 +287,11 @@ public class ProviderManagementController {
 
     // retrieve all contracts for a provider
     @GetMapping("/{id}/contracts")
-    public ResponseEntity<ApiResponse<List<ProviderContractResponseDTO>>> getAllContracts(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Page<ProviderContractResponseDTO>>> getAllContracts(@PathVariable Long id,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         try {
-            List<ProviderContractResponseDTO> contracts = providerService.getAllContractsForProvider(id);
-            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<List<ProviderContractResponseDTO>>builder()
+            Page<ProviderContractResponseDTO> contracts = providerService.getAllContractsForProvider(id, pageable);
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<Page<ProviderContractResponseDTO>>builder()
                     .success(true)
                     .message("Contracts retrieved successfully")
                     .statusCode(200)
@@ -277,7 +299,7 @@ public class ProviderManagementController {
                     .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<List<ProviderContractResponseDTO>>builder()
+                    .body(ApiResponse.<Page<ProviderContractResponseDTO>>builder()
                             .success(false)
                             .message("Failed to retrieve contracts: " + e.getMessage())
                             .statusCode(500)

@@ -81,6 +81,23 @@ public class ProviderServiceImpl implements ProviderService {
         }
     }
 
+    // get provider by id method
+    @Override
+    @Transactional
+    public ProviderDto getProviderById(Long id) {
+        try {
+            ProviderEntity provider = providerRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Provider not found with id: " + id));
+
+            // convert entity to DTO
+            ProviderDto responseDto = providerMapper.toDtoWithId(provider);
+
+            return responseDto;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve provider: " + e.getMessage());
+        }
+    }
+
     // update provider method
     @Override
     @Transactional
@@ -363,19 +380,19 @@ public class ProviderServiceImpl implements ProviderService {
 
     // retrieve all contracts for provider method
     @Override
-    public List<ProviderContractResponseDTO> getAllContractsForProvider(Long providerId) {
+    public Page<ProviderContractResponseDTO> getAllContractsForProvider(Long providerId, Pageable pageable) {
         try {
-            // optional check for provider
             providerRepository.findById(providerId)
                     .orElseThrow(() -> new RuntimeException("Provider not found with id: " + providerId));
 
-            List<ProviderContractEntity> contracts = providerContractRepository
-                    .findByProviderIdOrderByStartDateDesc(providerId);
+            Page<ProviderContractEntity> contracts = providerContractRepository
+                    .findByProviderIdOrderByStartDateDesc(providerId, pageable);
 
             List<ProviderContractResponseDTO> contractDtos = contracts.stream()
                     .map(providerMapper::toContractDto)
                     .toList();
-            return contractDtos;
+
+            return new PageImpl<>(contractDtos, pageable, contracts.getTotalElements());
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve contracts: " + e.getMessage());
         }

@@ -148,6 +148,7 @@ public class ProviderMapper {
 
         ProviderContractResponseDTO dto = new ProviderContractResponseDTO();
         dto.setId(entity.getId());
+        dto.setContractNumber(entity.getContractNumber());
         dto.setStartDate(entity.getStartDate().toString());
         dto.setEndDate(entity.getEndDate().toString());
         dto.setContractUrl(entity.getContractUrl());

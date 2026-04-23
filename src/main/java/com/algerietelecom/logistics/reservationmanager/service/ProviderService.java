@@ -22,6 +22,9 @@ public interface ProviderService {
     // create provider method
     CreateProviderDto createProvider(ProviderEntity providerToCreate);
 
+    // get provider by id method
+    ProviderDto getProviderById(Long id);
+
     // update provider method
     CreateProviderDto updateProvider(Long id, ProviderEntity providerToUpdate);
 
@@ -47,7 +50,7 @@ public interface ProviderService {
     void softDeleteContract(Long providerId, Long contractId);
 
     // get all contracts for a provider
-    List<ProviderContractResponseDTO> getAllContractsForProvider(Long providerId);
+    Page<ProviderContractResponseDTO> getAllContractsForProvider(Long providerId, Pageable pageable);
 
     // get all services for a contract
     ContractServicesResponseDTO getContractServices(Long contractId);
