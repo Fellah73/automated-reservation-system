@@ -86,7 +86,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                                 .action(HistoryAction.CREATION)
                                 .previousStatus(null)
                                 .newStatus(ReservationStatus.PENDING)
-                                .adminComment(request.getAdminComment())
+                                .adminComment("reservation request created number" + next)
                                 .modificationInstructions(null)
                                 .build();
 
@@ -224,7 +224,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                                 .action(HistoryAction.APPROVAL)
                                 .previousStatus(ReservationStatus.PENDING)
                                 .newStatus(ReservationStatus.APPROVED)
-                                .adminComment(updatedRequest.getAdminComment())
+                                .adminComment("reservation request approved " + updatedRequest.getRequestNumber())
                                 .modificationInstructions(null)
                                 .build();
 
@@ -264,7 +264,7 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                                 .action(HistoryAction.REJECTION)
                                 .previousStatus(ReservationStatus.PENDING)
                                 .newStatus(ReservationStatus.REJECTED)
-                                .adminComment(adminCommentDTO.getComment())
+                                .adminComment("reservation request rejected " + updatedRequest.getRequestNumber())
                                 .modificationInstructions(null)
                                 .build();
 
@@ -301,7 +301,8 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                                         .action(HistoryAction.MODIFICATION_REQUESTED)
                                         .previousStatus(ReservationStatus.PENDING)
                                         .newStatus(ReservationStatus.MODIFICATION_REQUESTED)
-                                        .adminComment(modificationRequest.getGlobalComment())
+                                        .adminComment("modification requested for reservation request "
+                                                        + reservationRequest.getRequestNumber())
                                         .modificationInstructions(jsonInstructions)
                                         .build();
 
@@ -342,7 +343,8 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                                         .action(HistoryAction.MODIFICATION_REQUESTED)
                                         .previousStatus(ReservationStatus.PENDING)
                                         .newStatus(ReservationStatus.MODIFICATION_REQUESTED)
-                                        .adminComment(modificationRequest.getGlobalComment())
+                                        .adminComment("modification requested for reservation request attachments "
+                                                        + reservationRequest.getRequestNumber())
                                         .modificationInstructions(jsonInstructions)
                                         .build();
 
@@ -458,7 +460,8 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                                         .action(HistoryAction.UPDATE)
                                         .previousStatus(request.getStatus())
                                         .newStatus(ReservationStatus.PENDING)
-                                        .adminComment(null)
+                                        .adminComment("Reservation request updated "
+                                                        + updatedRequest.getRequestNumber())
                                         .modificationInstructions("Details updated by user")
                                         .build();
 
@@ -511,7 +514,8 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                                 .action(HistoryAction.UPDATE)
                                 .previousStatus(reservationRequest.getStatus())
                                 .newStatus(ReservationStatus.PENDING)
-                                .adminComment(null)
+                                .adminComment("Reservation request attachments updated "
+                                                + updatedRequest.getRequestNumber())
                                 .modificationInstructions("Attachments updated by user")
                                 .build();
 

@@ -3,6 +3,9 @@ package com.algerietelecom.logistics.reservationmanager.service.impl;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.contracts.ProviderContractResponseDTO;
@@ -10,6 +13,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.eval
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.evaluation.ProviderEvaluationResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderStatsDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.ContractServicesResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderContractEntity;
@@ -155,13 +159,13 @@ public class ProviderServiceImpl implements ProviderService {
     // get all providers method
     @Override
     @Transactional
-    public List<ProviderDto> getAllProviders(ProviderType type) {
+    public Page<ProviderDto> getAllProviders(ProviderType type, Pageable pageable) {
         try {
-            List<ProviderEntity> providers = providerRepository.findByType(type);
+            Page<ProviderEntity> providers = providerRepository.findByType(type, pageable);
 
             // the type filter returns no providers
             if (providers.isEmpty()) {
-                providers = providerRepository.findAll();
+                providers = providerRepository.findAll(pageable);
             }
 
             // convert entities to DTOs
@@ -169,9 +173,32 @@ public class ProviderServiceImpl implements ProviderService {
                     .map(providerMapper::toDtoWithId)
                     .toList();
 
-            return providerDtos;
+            return new PageImpl<>(providerDtos, pageable, providers.getTotalElements());
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve providers: " + e.getMessage());
+        }
+
+    }
+
+    // get provider stats method
+    @Override
+    @Transactional
+    public ProviderStatsDTO getRequestStats() {
+        try {
+            long totalProviders = providerRepository.count();
+            long totalHotels = providerRepository.countByType(ProviderType.HOTEL);
+            long totalAirlines = providerRepository.countByType(ProviderType.AIRLINE);
+            long totalCatering = providerRepository.countByType(ProviderType.CATERING);
+
+            ProviderStatsDTO stats = new ProviderStatsDTO();
+            stats.setTotalProviders(totalProviders);
+            stats.setTotalHotels(totalHotels);
+            stats.setTotalAirlines(totalAirlines);
+            stats.setTotalCatering(totalCatering);
+
+            return stats;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve provider stats: " + e.getMessage());
         }
     }
 

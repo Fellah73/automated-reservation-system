@@ -2,6 +2,10 @@ package com.algerietelecom.logistics.reservationmanager.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,6 +28,8 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.eval
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.evaluation.ProviderEvaluationResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProviderStatsDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.ProvidersOverviewApiResponse;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.UpdateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.services.ContractServicesResponseDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
@@ -149,21 +155,29 @@ public class ProviderManagementController {
 
     // get all providers
     @GetMapping(path = "/all")
-    public ResponseEntity<ApiResponse<List<ProviderDto>>> getAllProviders(
+    public ResponseEntity<ApiResponse<ProvidersOverviewApiResponse>> getAllProviders(
             @RequestParam(required = false) ProviderType type,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @AuthenticationPrincipal UserEntity currentUser) {
 
         try {
-            List<ProviderDto> providers = providerService.getAllProviders(type);
-            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<List<ProviderDto>>builder()
+            Page<ProviderDto> providers = providerService.getAllProviders(type, pageable);
+            
+            ProviderStatsDTO stats = providerService.getRequestStats();
+
+            ProvidersOverviewApiResponse response = new ProvidersOverviewApiResponse();
+            response.setProviders(providers);
+            response.setStats(stats);
+
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<ProvidersOverviewApiResponse>builder()
                     .success(true)
                     .message("Providers retrieved successfully")
                     .statusCode(200)
-                    .data(providers)
+                    .data(response)
                     .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<List<ProviderDto>>builder()
+                    .body(ApiResponse.<ProvidersOverviewApiResponse>builder()
                             .success(false)
                             .message("Failed to retrieve providers: " + e.getMessage())
                             .statusCode(500)

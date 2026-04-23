@@ -1,7 +1,5 @@
 package com.algerietelecom.logistics.reservationmanager.domain.dtos.reservationRequest;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 
 import lombok.AllArgsConstructor;
