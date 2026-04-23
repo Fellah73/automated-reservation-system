@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -356,20 +357,20 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
         // get reservation request history
         @Override
         @Transactional
-        public List<ReservationHistoryResponseDTO> getReservationRequestHistory(String requestId) {
+        public Page<ReservationHistoryResponseDTO> getReservationRequestHistory(String requestId, Pageable pageable) {
                 ReservationRequest reservationRequest = reservationRequestRepository.findByRequestNumber(requestId)
                                 .orElseThrow(() -> new RuntimeException("Reservation request not found"));
 
                 try {
 
-                        List<ReservationHistory> history = historyRepository
-                                        .findByReservationRequestId(reservationRequest.getId());
+                        Page<ReservationHistory> history = historyRepository
+                                        .findByReservationRequestId(reservationRequest.getId(), pageable);
 
                         List<ReservationHistoryResponseDTO> responseDTOs = history.stream()
                                         .map(reservationMapper::toHistoryResponseDTO)
                                         .collect(Collectors.toList());
 
-                        return responseDTOs;
+                        return new PageImpl<>(responseDTOs, history.getPageable(), history.getTotalElements());
                 } catch (Exception e) {
                         throw new RuntimeException("Error retrieving reservation request history: " + e.getMessage());
                 }

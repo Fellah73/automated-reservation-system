@@ -168,7 +168,9 @@ public class ReservationRequestMapper {
         ReservationHistoryResponseDTO dto = new ReservationHistoryResponseDTO();
         dto.setId(entity.getId());
         dto.setAction(entity.getAction().name());
-        dto.setPerformerName(null);
+        dto.setPerformerName(entity.getPerformedBy() != null
+                ? entity.getPerformedBy().getUsername()
+                : null);
 
         dto.setPreviousStatus(entity.getPreviousStatus() != null ? entity.getPreviousStatus().name() : null);
         dto.setNewStatus(entity.getNewStatus().name());
@@ -204,9 +206,7 @@ public class ReservationRequestMapper {
         dto.setCreatedAt(entity.getCreatedAt());
 
         if (entity.getHistory() != null) {
-            dto.setFullHistory(entity.getHistory().stream()
-                    .map(this::toHistoryResponseDTO)
-                    .collect(Collectors.toList()));
+            dto.setHistoryLength(entity.getHistory().size());
         }
 
         return dto;

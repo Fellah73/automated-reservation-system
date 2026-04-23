@@ -7,8 +7,8 @@ import lombok.Data;
 @Data
 public class ReservationHistoryResponseDTO {
     private Long id;
-    private String action; 
-    private String performerName; 
+    private String action;
+    private String performerName;
     private String previousStatus;
     private String newStatus;
     private String adminComment;

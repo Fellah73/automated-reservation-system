@@ -15,7 +15,7 @@ public interface ReservationHistoryRepository extends JpaRepository<ReservationH
 
     List<ReservationHistory> findByReservationRequestRequestNumberOrderByTimestampDesc(String requestNumber);
 
-    List<ReservationHistory> findByReservationRequestId(Long reservationRequestId);
+    Page<ReservationHistory> findByReservationRequestId(Long reservationRequestId, Pageable pageable);
 
     Page<ReservationHistory> findAllByOrderByTimestampDesc(Pageable pageable);
 }

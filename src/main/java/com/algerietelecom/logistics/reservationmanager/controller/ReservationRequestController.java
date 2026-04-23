@@ -372,19 +372,21 @@ public class ReservationRequestController {
 
     // get reservation request history
     @GetMapping(path = "/{id}/history")
-    public ResponseEntity<ApiResponse<List<ReservationHistoryResponseDTO>>> getRequestHistory(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Page<ReservationHistoryResponseDTO>>> getRequestHistory(@PathVariable String id,
+        @PageableDefault(size = 20, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
 
         try {
-            List<ReservationHistoryResponseDTO> history = reservationService.getReservationRequestHistory(id);
+            Page<ReservationHistoryResponseDTO> history = reservationService.getReservationRequestHistory(id, pageable);
 
-            return ResponseEntity.ok(ApiResponse.<List<ReservationHistoryResponseDTO>>builder()
+            return ResponseEntity.ok(ApiResponse.<Page<ReservationHistoryResponseDTO>>builder()
                     .success(true)
                     .statusCode(200)
                     .message("Reservation request history retrieved successfully")
                     .data(history)
                     .build());
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(ApiResponse.<List<ReservationHistoryResponseDTO>>builder()
+            return ResponseEntity.status(500).body(ApiResponse.<Page<ReservationHistoryResponseDTO>>builder()
                     .success(false)
                     .message(e.getMessage())
                     .statusCode(500)

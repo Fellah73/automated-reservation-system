@@ -57,13 +57,14 @@ public interface ReservationRequestService {
         ReservationRequestResponseDTO requestChanges(String id, AdminModificationRequestDTO modificationRequest,
                         UserEntity currentUser);
 
-        ReservationRequestResponseDTO requestAttachmentChanges(String id, AdminModificationRequestDTO modificationRequest,
+        ReservationRequestResponseDTO requestAttachmentChanges(String id,
+                        AdminModificationRequestDTO modificationRequest,
                         UserEntity currentUser);
 
         // history & audit log
         void saveHistory(ReservationHistory history);
 
-        List<ReservationHistoryResponseDTO> getReservationRequestHistory(String requestId);
+        Page<ReservationHistoryResponseDTO> getReservationRequestHistory(String requestId, Pageable pageable);
 
         Page<ReservationWithHistoryResponseDTO> getGlobalAuditLog(Pageable pageable);
 
