@@ -190,6 +190,10 @@ public class ProviderServiceImpl implements ProviderService {
                     .map(providerMapper::toDtoWithId)
                     .toList();
 
+            // set hasEvaluation flag
+            providerDtos
+                    .forEach(dto -> dto.setHasEvaluation(providerEvaluationRepository.existsByProviderId(dto.getId())));
+
             return new PageImpl<>(providerDtos, pageable, providers.getTotalElements());
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve providers: " + e.getMessage());
@@ -308,6 +312,8 @@ public class ProviderServiceImpl implements ProviderService {
 
             // initialize default services for this contract
             initializeDefaultServices(contract);
+
+            contract.setActive(contract.isValid());
 
             ProviderContractEntity savedContract = providerContractRepository.save(contract);
 

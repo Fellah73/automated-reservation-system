@@ -16,4 +16,5 @@ public class ProviderDto {
     private String contactPerson;
     private String logoUrl;
     private Boolean active;
+    private Boolean hasEvaluation;
 }

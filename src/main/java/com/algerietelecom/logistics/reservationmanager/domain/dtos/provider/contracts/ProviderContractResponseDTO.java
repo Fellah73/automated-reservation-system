@@ -15,5 +15,6 @@ public class ProviderContractResponseDTO {
     private String contractUrl;
     private String fileName;
     private String termsAndConditions;
+    private Boolean active;
 
 }

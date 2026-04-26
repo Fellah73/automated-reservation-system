@@ -8,4 +8,6 @@ import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.
 @Repository
 public interface ProviderEvaluationRepository extends JpaRepository<ProviderEvaluationEntity, Long> {
     ProviderEvaluationEntity findByProviderId(Long providerId);
+
+    boolean existsByProviderId(Long providerId);
 }

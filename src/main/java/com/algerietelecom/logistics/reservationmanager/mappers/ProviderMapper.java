@@ -154,6 +154,7 @@ public class ProviderMapper {
         dto.setContractUrl(entity.getContractUrl());
         dto.setFileName(entity.getFileName());
         dto.setTermsAndConditions(entity.getTermsAndConditions());
+        dto.setActive(entity.getActive());
 
         return dto;
     }
