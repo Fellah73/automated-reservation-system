@@ -5,10 +5,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationBookingEntity;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 
 @Repository
 public interface AccommodationBookingRepository extends JpaRepository<AccommodationBookingEntity, Long> {
     @Query("SELECT SUM(b.totalAmount) FROM AccommodationBookingEntity b")
     Double sumTotalAmount();
+
+    Boolean existsByReservationRequest(ReservationRequest reservation);
 
 }

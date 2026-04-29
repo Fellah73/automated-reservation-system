@@ -67,6 +67,8 @@ public class ReservationRequestServiceImpl implements ReservationRequestService 
                 request.setCreatedAt(LocalDateTime.now());
                 request.setUpdatedAt(LocalDateTime.now());
                 request.setStatus(ReservationStatus.PENDING);
+                request.setDuration((int) java.time.Duration
+                                .between(request.getDepartureDate(), request.getReturnDate()).toDays() + 1);
 
                 if (request.getParticipants() != null) {
                         request.getParticipants().forEach(participant -> participant.setRequest(request));

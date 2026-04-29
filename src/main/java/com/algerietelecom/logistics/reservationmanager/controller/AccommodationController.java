@@ -25,7 +25,8 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodation
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingRequestDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingStatusDTO;
-import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.ProviderSearchDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.UnbookedReservationRequestDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.service.AccommodationService;
 
@@ -40,12 +41,12 @@ public class AccommodationController {
 
     // seach hotels by city
     @GetMapping(path = "/search")
-    public ResponseEntity<ApiResponse<List<CreateProviderDto>>> getAvailableHotels(
+    public ResponseEntity<ApiResponse<List<ProviderSearchDTO>>> getAvailableHotels(
             @RequestParam(required = false) String city) {
         try {
-            List<CreateProviderDto> hotels = accommodationService.searchAccommodationsProvidersByCity(city);
+            List<ProviderSearchDTO> hotels = accommodationService.searchAccommodationsProvidersByCity(city);
 
-            return ResponseEntity.ok(ApiResponse.<List<CreateProviderDto>>builder()
+            return ResponseEntity.ok(ApiResponse.<List<ProviderSearchDTO>>builder()
                     .success(true)
                     .message("Accommodation services found in city: " + city)
                     .statusCode(200)
@@ -53,9 +54,32 @@ public class AccommodationController {
                     .build());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<List<CreateProviderDto>>builder()
+                    .body(ApiResponse.<List<ProviderSearchDTO>>builder()
                             .success(false)
                             .message("Erreur lors de la récupération des hôtels : " + e.getMessage())
+                            .statusCode(500)
+                            .build());
+        }
+    }
+
+    // get non booked reservations request for accommodation
+    @GetMapping(path = "/pending")
+    public ResponseEntity<ApiResponse<List<UnbookedReservationRequestDTO>>> getPendingBookings(
+            @AuthenticationPrincipal UserEntity currentUser) {
+        try {
+            List<UnbookedReservationRequestDTO> pendingBookings = accommodationService
+                    .getUnbookedReservationRequests(currentUser);
+            return ResponseEntity.ok(ApiResponse.<List<UnbookedReservationRequestDTO>>builder()
+                    .success(true)
+                    .message("Pending bookings retrieved successfully")
+                    .statusCode(200)
+                    .data(pendingBookings)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<UnbookedReservationRequestDTO>>builder()
+                            .success(false)
+                            .message("Failed to retrieve pending bookings: " + e.getMessage())
                             .statusCode(500)
                             .build());
         }

@@ -16,7 +16,8 @@ public class AccommodationBookingDetailsResponseDto {
     private Long id;
     private String status;
     private Double totalAmount;
-    private Long requestId;
+
+    private RequestDetailsDto request;
 
     private ProviderDetailsDto provider;
 
@@ -26,10 +27,27 @@ public class AccommodationBookingDetailsResponseDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class RequestDetailsDto {
+        private Long id;
+        private String requestNumber;
+        private String missionType;
+        private String destination;
+        private String purpose;
+        private String departureDate;
+        private String returnDate;
+        private Integer peopleCount;
+        private Integer duration;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ProviderDetailsDto {
         private Long id;
         private String name;
         private String address;
+        private String logoUrl;
     }
 
     @Data

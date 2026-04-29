@@ -12,7 +12,8 @@ import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodation
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingRequestDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingStatusDTO;
-import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.ProviderSearchDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.UnbookedReservationRequestDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationBookingEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationReservationEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
@@ -23,7 +24,6 @@ import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Reserv
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.AccommodationBooking.BookingStatus;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Provider.ProviderType;
 import com.algerietelecom.logistics.reservationmanager.mappers.AccommodationBookingMapper;
-import com.algerietelecom.logistics.reservationmanager.mappers.ProviderMapper;
 import com.algerietelecom.logistics.reservationmanager.repositories.accommodation.AccommodationBookingRepository;
 import com.algerietelecom.logistics.reservationmanager.repositories.provider.AccommodationServiceRepository;
 import com.algerietelecom.logistics.reservationmanager.repositories.provider.ProviderRepository;
@@ -41,13 +41,12 @@ public class AccommodationServiceImpl implements AccommodationService {
     private final ReservationRequestRepository reservationRequestRepository;
     private final AccommodationServiceRepository accommodationServiceRepository;
     private final AccommodationBookingRepository accommodationBookingRepository;
-    private final ProviderMapper providerMapper;
     private final AccommodationBookingMapper bookingMapper;
 
     // get hostel providers by city
     @Override
     @Transactional
-    public List<CreateProviderDto> searchAccommodationsProvidersByCity(String city) {
+    public List<ProviderSearchDTO> searchAccommodationsProvidersByCity(String city) {
         try {
             List<ProviderEntity> providers;
             if (city != null) {
@@ -56,13 +55,45 @@ public class AccommodationServiceImpl implements AccommodationService {
                 providers = providerRepository.findByType(ProviderType.HOTEL);
             }
 
-            List<CreateProviderDto> providerDtos = providers.stream()
-                    .filter(provider -> provider.getContracts() != null && !provider.getContracts().isEmpty())
-                    .map(providerMapper::toDto)
+            List<ProviderEntity> providersWithActiveContracts = providers.stream()
+                    .filter(provider -> provider.getContracts() != null && !provider.getContracts().isEmpty()
+                            && provider.getContracts().stream()
+                                    .anyMatch(contract -> contract.getActive() == true))
+                    .toList();
+
+            List<ProviderSearchDTO> providerDtos = providersWithActiveContracts.stream()
+                    .map(bookingMapper::toProviderSearchDto)
                     .toList();
 
             return providerDtos;
 
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    // get unbooked reservation requests
+    @Override
+    @Transactional
+    public List<UnbookedReservationRequestDTO> getUnbookedReservationRequests(UserEntity currentUser) {
+        try {
+            List<ReservationRequest> approvedRequests = reservationRequestRepository
+                    .findByStatus(ReservationStatus.APPROVED);
+
+            List<ReservationRequest> unbookedRequests = new ArrayList<>();
+
+            for (ReservationRequest request : approvedRequests) {
+                boolean hasBooking = accommodationBookingRepository.existsByReservationRequest(request);
+                if (!hasBooking) {
+                    unbookedRequests.add(request);
+                }
+            }
+
+            List<UnbookedReservationRequestDTO> unbookedResponseDtos = unbookedRequests.stream()
+                    .map(bookingMapper::toReservationRequestListDto)
+                    .toList();
+
+            return unbookedResponseDtos;
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }

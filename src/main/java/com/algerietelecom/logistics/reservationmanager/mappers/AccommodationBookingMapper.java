@@ -7,9 +7,15 @@ import org.springframework.stereotype.Component;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingDetailsResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingOverviewResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingResponseDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.ProviderSearchDTO;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.ProviderSearchDTO.ProviderServicesDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.UnbookedReservationRequestDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationBookingEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationReservationEntity;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderContractEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.providerServices.AccommodationServiceEntity;
+import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 
 @Component
 public class AccommodationBookingMapper {
@@ -40,7 +46,19 @@ public class AccommodationBookingMapper {
         responseDto.setId(bookingEntity.getId());
         responseDto.setStatus(bookingEntity.getStatus().name());
         responseDto.setTotalAmount(bookingEntity.getTotalAmount());
-        responseDto.setRequestId(bookingEntity.getReservationRequest().getId());
+
+        // request details
+        AccommodationBookingDetailsResponseDto.RequestDetailsDto requestDetails = new AccommodationBookingDetailsResponseDto.RequestDetailsDto();
+        requestDetails.setId(bookingEntity.getReservationRequest().getId());
+        requestDetails.setRequestNumber(bookingEntity.getReservationRequest().getRequestNumber());
+        requestDetails.setMissionType(bookingEntity.getReservationRequest().getMissionType());
+        requestDetails.setDestination(bookingEntity.getReservationRequest().getDestination());
+        requestDetails.setPurpose(bookingEntity.getReservationRequest().getReason());
+        requestDetails.setDepartureDate(bookingEntity.getReservationRequest().getDepartureDate().toString());
+        requestDetails.setReturnDate(bookingEntity.getReservationRequest().getReturnDate().toString());
+        requestDetails.setPeopleCount(bookingEntity.getReservationRequest().getParticipants().size());
+        requestDetails.setDuration(bookingEntity.getReservationRequest().getDuration());
+        responseDto.setRequest(requestDetails);
 
         // provider details
         AccommodationBookingDetailsResponseDto.ProviderDetailsDto providerDetails = new AccommodationBookingDetailsResponseDto.ProviderDetailsDto();
@@ -48,6 +66,7 @@ public class AccommodationBookingMapper {
         providerDetails.setId(provider.getId());
         providerDetails.setName(provider.getName());
         providerDetails.setAddress(provider.getAddress());
+        providerDetails.setLogoUrl(provider.getLogoUrl());
 
         responseDto.setProvider(providerDetails);
 
@@ -97,4 +116,51 @@ public class AccommodationBookingMapper {
 
         return responseDto;
     }
+
+    public ProviderSearchDTO toProviderSearchDto(ProviderEntity providerEntity) {
+        if (providerEntity == null) {
+            return null;
+        }
+
+        ProviderSearchDTO dto = new ProviderSearchDTO();
+        dto.setId(providerEntity.getId());
+        dto.setName(providerEntity.getName());
+        dto.setLogoUrl(providerEntity.getLogoUrl());
+
+        ProviderContractEntity providerActiveContracts = providerEntity.getContracts().get(0);
+
+        List<AccommodationServiceEntity> services = providerActiveContracts.getAccommodationServices();
+
+        List<ProviderServicesDto> dtoServices = services.stream()
+                .map(service -> {
+                    ProviderServicesDto serviceDto = new ProviderServicesDto();
+                    serviceDto.setId(service.getId());
+                    serviceDto.setRoomType(service.getRoomType());
+                    serviceDto.setPricePerNight(service.getPricePerNight());
+                    serviceDto.setBreakfastIncluded(service.getBreakfastIncluded());
+                    serviceDto.setAmenities(service.getAmenities());
+                    return serviceDto;
+                })
+                .toList();
+
+        dto.setServices(dtoServices);
+        return dto;
+    }
+
+    public UnbookedReservationRequestDTO toReservationRequestListDto(ReservationRequest reservationRequestEntity) {
+        if (reservationRequestEntity == null) {
+            return null;
+        }
+
+        UnbookedReservationRequestDTO dto = new UnbookedReservationRequestDTO();
+        dto.setRequestId(reservationRequestEntity.getId());
+        dto.setRequestNumber(reservationRequestEntity.getRequestNumber());
+        dto.setMissionType(reservationRequestEntity.getMissionType());
+        dto.setDepartureDate(reservationRequestEntity.getDepartureDate());
+        dto.setReturnDate(reservationRequestEntity.getReturnDate());
+        dto.setPeopleCount(reservationRequestEntity.getParticipants().size());
+
+        return dto;
+    }
+
 }
