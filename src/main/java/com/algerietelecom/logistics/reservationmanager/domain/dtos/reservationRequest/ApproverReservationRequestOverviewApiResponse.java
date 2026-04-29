@@ -12,7 +12,4 @@ import lombok.NoArgsConstructor;
 public class ApproverReservationRequestOverviewApiResponse {
     private Page<ReservationRequestOverviewDTO> reservationRequests;
     private ReservationRequestsStatsDTO stats;
-
-    // Getters and Setters
-
 }

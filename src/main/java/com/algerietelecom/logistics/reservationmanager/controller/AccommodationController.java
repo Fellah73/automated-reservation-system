@@ -2,6 +2,10 @@ package com.algerietelecom.logistics.reservationmanager.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,8 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.ApiResponse;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingDetailsResponseDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingOverviewApiResponse;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingOverviewResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingRequestDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingResponseDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingStatusDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.service.AccommodationService;
@@ -124,6 +131,37 @@ public class AccommodationController {
                     .body(ApiResponse.<AccommodationBookingDetailsResponseDto>builder()
                             .success(false)
                             .message("Failed to retrieve booking: " + e.getMessage())
+                            .statusCode(500)
+                            .build());
+        }
+    }
+
+    // get all accommodation bookings pagination
+    @GetMapping(path = "/all")
+    public ResponseEntity<ApiResponse<AccommodationBookingOverviewApiResponse>> getAllBookings(
+            @PageableDefault(size = 20, sort = "checkInDate", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal UserEntity currentUser) {
+        try {
+            Page<AccommodationBookingOverviewResponseDto> result = accommodationService.getAllBookings(pageable,
+                    currentUser);
+
+            AccommodationBookingStatusDTO bookingStatus = accommodationService.getAllBookingStatus();
+
+            AccommodationBookingOverviewApiResponse apiResponseData = new AccommodationBookingOverviewApiResponse();
+            apiResponseData.setBookings(result);
+            apiResponseData.setBookingStatus(bookingStatus);
+
+            return ResponseEntity.ok(ApiResponse.<AccommodationBookingOverviewApiResponse>builder()
+                    .success(true)
+                    .message("Bookings retrieved successfully")
+                    .statusCode(200)
+                    .data(apiResponseData)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<AccommodationBookingOverviewApiResponse>builder()
+                            .success(false)
+                            .message("Failed to retrieve bookings: " + e.getMessage())
                             .statusCode(500)
                             .build());
         }

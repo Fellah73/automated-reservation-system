@@ -40,5 +40,4 @@ public interface ReservationRequestRepository extends JpaRepository<ReservationR
     Page<ReservationRequest> findAllFilterByStatus(Pageable pageable, ReservationStatus status);
 
     long countByDepartureDateLessThan(LocalDateTime threeDaysLater);
-
 }

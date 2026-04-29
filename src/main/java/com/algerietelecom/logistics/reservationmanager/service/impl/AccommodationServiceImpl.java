@@ -3,11 +3,15 @@ package com.algerietelecom.logistics.reservationmanager.service.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingDetailsResponseDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingOverviewResponseDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingRequestDto;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingResponseDto;
+import com.algerietelecom.logistics.reservationmanager.domain.dtos.accommodationBooking.AccommodationBookingStatusDTO;
 import com.algerietelecom.logistics.reservationmanager.domain.dtos.provider.main.CreateProviderDto;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationBookingEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.accommodation.AccommodationReservationEntity;
@@ -15,6 +19,7 @@ import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.User
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.providerServices.AccommodationServiceEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.AccommodationBooking.BookingStatus;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Provider.ProviderType;
 import com.algerietelecom.logistics.reservationmanager.mappers.AccommodationBookingMapper;
@@ -199,39 +204,44 @@ public class AccommodationServiceImpl implements AccommodationService {
             AccommodationBookingEntity bookingEntity = accommodationBookingRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Accommodation booking not found with id: " + id));
 
-            List<AccommodationReservationEntity> reservations = bookingEntity.getItems();
-            ProviderEntity provider = bookingEntity.getProvider();
+            AccommodationBookingDetailsResponseDto responseDto = bookingMapper.toDetailsResponseDto(bookingEntity);
 
-            AccommodationBookingDetailsResponseDto responseDto = new AccommodationBookingDetailsResponseDto();
-            responseDto.setId(bookingEntity.getId());
-            responseDto.setStatus(bookingEntity.getStatus().name());
-            responseDto.setTotalAmount(bookingEntity.getTotalAmount());
-            responseDto.setRequestId(bookingEntity.getReservationRequest().getId());
-
-            // provider details
-            AccommodationBookingDetailsResponseDto.ProviderDetailsDto providerDetails = new AccommodationBookingDetailsResponseDto.ProviderDetailsDto();
-
-            providerDetails.setId(provider.getId());
-            providerDetails.setName(provider.getName());
-            providerDetails.setAddress(provider.getAddress());
-
-            responseDto.setProvider(providerDetails);
-
-            List<AccommodationBookingDetailsResponseDto.BookingItemDetailsDto> itemDtos = reservations.stream()
-                    .map(reservation -> {
-                        AccommodationBookingDetailsResponseDto.BookingItemDetailsDto itemDto = new AccommodationBookingDetailsResponseDto.BookingItemDetailsDto();
-                        itemDto.setReservationId(reservation.getId());
-                        itemDto.setCount(reservation.getCount());
-                        itemDto.setServiceId(reservation.getAccommodationService().getId());
-                        itemDto.setServiceName(reservation.getAccommodationService().getRoomType());
-                        itemDto.setCapacity(reservation.getAccommodationService().getCapacity());
-                        itemDto.setPricePerNight(reservation.getAccommodationService().getPricePerNight());
-                        return itemDto;
-                    })
-                    .toList();
-
-            responseDto.setItems(itemDtos);
             return responseDto;
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    // get all bookings
+    @Override
+    @Transactional
+    public Page<AccommodationBookingOverviewResponseDto> getAllBookings(Pageable pageable, UserEntity currentUser) {
+        try {
+            Page<AccommodationBookingEntity> bookingEntities = accommodationBookingRepository.findAll(pageable);
+            return bookingEntities.map(booking -> {
+
+                AccommodationBookingOverviewResponseDto responseDto = bookingMapper.toOverviewResponseDto(booking);
+
+                return responseDto;
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    // get all bookings status
+    @Override
+    public AccommodationBookingStatusDTO getAllBookingStatus() {
+        try {
+            AccommodationBookingStatusDTO statusDTO = new AccommodationBookingStatusDTO();
+            statusDTO.setTotalBookings(accommodationBookingRepository.count());
+            statusDTO.setTotalRequestsWithoutBooking(
+                    (reservationRequestRepository.countByStatus(ReservationStatus.APPROVED))
+                            - accommodationBookingRepository.count());
+            statusDTO.setTotalPendingRequests(reservationRequestRepository.countByStatus(ReservationStatus.PENDING)
+                    + reservationRequestRepository.countByStatus(ReservationStatus.MODIFICATION_REQUESTED));
+            statusDTO.setTotalToPay(accommodationBookingRepository.sumTotalAmount());
+            return statusDTO;
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
