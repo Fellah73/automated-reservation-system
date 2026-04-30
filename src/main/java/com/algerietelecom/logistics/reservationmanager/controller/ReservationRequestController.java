@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -49,6 +50,7 @@ public class ReservationRequestController {
     // user routes
     // request reservation creation
     @PostMapping(path = "/create")
+    @PreAuthorize("hasRole('AGENT')")
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> createReservation(
             @RequestBody ReservationRequestCreateDTO createDTO,
             @AuthenticationPrincipal UserEntity currentUser) {
@@ -80,6 +82,7 @@ public class ReservationRequestController {
 
     // add attachment to reservation request
     @PostMapping(path = "/{id}/attachments")
+    @PreAuthorize("hasRole('AGENT')")
     public ResponseEntity<ApiResponse<List<ReservationAttachmentDTO>>> addAttachment(
             @PathVariable String id,
             @RequestBody ReservationAttachmentBatchDTO attachmentBatchDTO,
@@ -107,6 +110,7 @@ public class ReservationRequestController {
 
     // update reservation request
     @PutMapping(path = "/{id}")
+    @PreAuthorize("hasRole('AGENT')")
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> updateReservation(
             @PathVariable String id,
             @RequestBody ReservationRequestUpdateDTO updateDTO,
@@ -133,6 +137,7 @@ public class ReservationRequestController {
 
     // update reservation request attachments
     @PutMapping(path = "/{id}/attachments")
+    @PreAuthorize("hasRole('AGENT')")
     public ResponseEntity<ApiResponse<List<ReservationAttachmentDTO>>> syncAttachments(
             @PathVariable String id,
             @RequestBody ReservationAttachmentBatchDTO attachmentBatchDTO,
@@ -160,6 +165,7 @@ public class ReservationRequestController {
 
     // get all user reservations
     @GetMapping(path = "/my")
+    @PreAuthorize("hasRole('AGENT')")
     public ResponseEntity<ApiResponse<ReservationRequestOverviewApiResponse>> getMyReservations(
             @AuthenticationPrincipal UserEntity currentUser) {
 
@@ -224,6 +230,7 @@ public class ReservationRequestController {
 
     // get all reservation requests with pagination
     @GetMapping(path = "/all")
+    @PreAuthorize("hasRole('APPROVER')")
     public ResponseEntity<ApiResponse<ApproverReservationRequestOverviewApiResponse>> getAllReservations(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
@@ -254,6 +261,7 @@ public class ReservationRequestController {
 
     // approve reservation request
     @PatchMapping(path = "/{id}/approve")
+    @PreAuthorize("hasRole('APPROVER')")
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> approveRequest(@PathVariable String id,
             @AuthenticationPrincipal UserEntity currentUser) {
         try {
@@ -287,6 +295,7 @@ public class ReservationRequestController {
 
     // reject reservation request
     @PatchMapping(path = "/{id}/reject")
+    @PreAuthorize("hasRole('APPROVER')")
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> rejectRequest(@PathVariable String id,
             @RequestBody AdminCommentDTO adminCommentDTO,
             @AuthenticationPrincipal UserEntity currentUser) {
@@ -321,6 +330,7 @@ public class ReservationRequestController {
 
     // request update on reservation request
     @PatchMapping(path = "/{id}/request-changes")
+    @PreAuthorize("hasRole('APPROVER')")
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> requestChanges(
             @PathVariable String id,
             @RequestBody AdminModificationRequestDTO modificationRequest,
@@ -346,6 +356,7 @@ public class ReservationRequestController {
 
     // request update on reservation request attachments
     @PatchMapping(path = "/{id}/request-changes/attachments")
+    @PreAuthorize("hasRole('APPROVER')")
     public ResponseEntity<ApiResponse<ReservationRequestResponseDTO>> requestAttachmentChanges(
             @PathVariable String id,
             @RequestBody AdminModificationRequestDTO modificationRequest,
@@ -372,6 +383,7 @@ public class ReservationRequestController {
 
     // get reservation request history
     @GetMapping(path = "/{id}/history")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<ReservationHistoryResponseDTO>>> getRequestHistory(@PathVariable String id,
         @PageableDefault(size = 20, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable
     ) {
@@ -396,6 +408,7 @@ public class ReservationRequestController {
 
     // get all reservation requests history
     @GetMapping("/audit-log")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<ReservationWithHistoryResponseDTO>>> getAuditLog(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 

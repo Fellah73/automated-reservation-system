@@ -2,6 +2,7 @@ package com.algerietelecom.logistics.reservationmanager.service.impl;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Random;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -34,6 +35,7 @@ import jakarta.transaction.Transactional;
 @Service
 public class ProviderServiceImpl implements ProviderService {
 
+    private final Random random = new Random();
     private final ProviderRepository providerRepository;
     private final ProviderContractRepository providerContractRepository;
     private final ProviderEvaluationRepository providerEvaluationRepository;
@@ -64,6 +66,7 @@ public class ProviderServiceImpl implements ProviderService {
                     .nif(providerToCreate.getNif())
                     .email(providerToCreate.getEmail())
                     .phoneNumber(providerToCreate.getPhoneNumber())
+                    .city(providerToCreate.getCity())
                     .address(providerToCreate.getAddress())
                     .contactPerson(providerToCreate.getContactPerson())
                     .logoUrl(providerToCreate.getLogoUrl())
@@ -237,11 +240,11 @@ public class ProviderServiceImpl implements ProviderService {
         switch (type) {
             case HOTEL -> {
                 List<AccommodationServiceEntity> defaultRooms = List.of(
-                        createRoom(contract, "SIMPLE", 7500),
-                        createRoom(contract, "DOUBLE", 9500),
-                        createRoom(contract, "TRIPLE", 12000),
-                        createRoom(contract, "JUNIOR", 15000),
-                        createRoom(contract, "SENIOR", 22000));
+                        createRoom(contract, "SIMPLE", 7000, 9000, 1),
+                        createRoom(contract, "DOUBLE", 9000, 11000, 2),
+                        createRoom(contract, "TRIPLE", 11000, 13500, 3),
+                        createRoom(contract, "JUNIOR", 13500, 16500, 4),
+                        createRoom(contract, "SENIOR", 20000, 24000, 5));
                 contract.setAccommodationServices(defaultRooms);
             }
             case CATERING -> {
@@ -262,12 +265,16 @@ public class ProviderServiceImpl implements ProviderService {
     }
 
     // create room method
-    private AccommodationServiceEntity createRoom(ProviderContractEntity contract, String type, double price) {
+    private AccommodationServiceEntity createRoom(ProviderContractEntity contract, String type, double minPrice,
+            double maxPrice, Integer capacity) {
+
+        double randomPrice = Math.round((minPrice + (maxPrice - minPrice) * random.nextDouble()) / 100) * 100;
         return AccommodationServiceEntity.builder()
                 .roomType(type)
-                .pricePerNight(BigDecimal.valueOf(price))
+                .pricePerNight(BigDecimal.valueOf(randomPrice))
                 .breakfastIncluded(true)
                 .amenities("Standard AT Configuration")
+                .capacity(capacity)
                 .contract(contract)
                 .build();
     }

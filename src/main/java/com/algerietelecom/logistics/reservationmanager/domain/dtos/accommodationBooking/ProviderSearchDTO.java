@@ -26,6 +26,7 @@ public class ProviderSearchDTO {
         private BigDecimal pricePerNight;
         private Boolean breakfastIncluded;
         private String amenities;
+        private Integer capacity;
     }
 
 }

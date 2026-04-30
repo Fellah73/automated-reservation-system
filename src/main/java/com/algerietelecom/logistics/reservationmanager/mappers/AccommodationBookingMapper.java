@@ -139,6 +139,7 @@ public class AccommodationBookingMapper {
                     serviceDto.setPricePerNight(service.getPricePerNight());
                     serviceDto.setBreakfastIncluded(service.getBreakfastIncluded());
                     serviceDto.setAmenities(service.getAmenities());
+                    serviceDto.setCapacity(service.getCapacity());
                     return serviceDto;
                 })
                 .toList();

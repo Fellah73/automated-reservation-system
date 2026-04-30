@@ -11,6 +11,7 @@ public class CreateProviderDto {
     private String nif;
     private String email;
     private String phoneNumber;
+    private String city;
     private String address;
     private String contactPerson;
     private String logoUrl;
