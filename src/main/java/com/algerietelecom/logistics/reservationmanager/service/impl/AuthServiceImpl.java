@@ -20,7 +20,7 @@ public class AuthServiceImpl implements AuthService {
 
     // login method
     @Override
-    public String login(UserEntity userEntity) {
+    public String[] login(UserEntity userEntity) {
         UserEntity userRecord = userRepository.findAllByEmail(userEntity.getEmail());
         if (userRecord == null) {
             throw new RuntimeException("User not found");
@@ -29,8 +29,12 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(userEntity.getPassword(), userRecord.getPassword())) {
             throw new RuntimeException("Wrong password");
         }
+ 
+        String[] response = new String[2];
+        response[0] = jwtService.generateToken(userRecord.getUsername(), userRecord.getEmail());
+        response[1] = userRecord.getRole().name();
 
-        return jwtService.generateToken(userRecord.getUsername(), userRecord.getEmail());
+        return response;
     }
 
     // me method

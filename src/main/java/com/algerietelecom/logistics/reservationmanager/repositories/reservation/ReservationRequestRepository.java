@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
-import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest.ReservationStatus;
 
 @Repository
 public interface ReservationRequestRepository extends JpaRepository<ReservationRequest, Long> {

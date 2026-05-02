@@ -23,9 +23,9 @@ import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.User
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationAttachment;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationHistory;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
-import com.algerietelecom.logistics.reservationmanager.domain.enumeration.HistoryAction;
-import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest.AttachmentCategory;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest.HistoryAction;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest.ReservationStatus;
 import com.algerietelecom.logistics.reservationmanager.mappers.ReservationRequestMapper;
 import com.algerietelecom.logistics.reservationmanager.repositories.reservation.ReservationAttachmentRepository;
 import com.algerietelecom.logistics.reservationmanager.repositories.reservation.ReservationHistoryRepository;

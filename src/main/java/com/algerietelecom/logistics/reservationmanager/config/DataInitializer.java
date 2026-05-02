@@ -12,7 +12,8 @@ import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.User
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationParticipant;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequestPreference;
-import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Auth.UserRole;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest.ReservationStatus;
 import com.algerietelecom.logistics.reservationmanager.repositories.auth.AuthRepository;
 import com.algerietelecom.logistics.reservationmanager.service.ReservationRequestService;
 
@@ -22,66 +23,83 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
-    private final AuthRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final ReservationRequestService reservationRequestService;
+        private final AuthRepository userRepository;
+        private final PasswordEncoder passwordEncoder;
+        private final ReservationRequestService reservationRequestService;
 
-    @Override
-    @Transactional
-    public void run(String... args) throws Exception {
+        @Override
+        @Transactional
+        public void run(String... args) throws Exception {
 
-        UserEntity admin = userRepository.findAll().stream()
-                .filter(u -> "admin".equals(u.getUsername()))
-                .findFirst()
-                .orElseGet(() -> {
-                    UserEntity newAdmin = new UserEntity();
-                    newAdmin.setUsername("admin");
-                    newAdmin.setPassword(passwordEncoder.encode("admin123"));
-                    newAdmin.setEmail("admin@telecom.com");
-                    newAdmin.setRole("ADMIN");
-                    return userRepository.save(newAdmin); 
-                });
+                UserEntity admin = userRepository.findByUsername("admin_at")
+                                .orElseGet(() -> {
+                                        UserEntity newAdmin = new UserEntity();
+                                        newAdmin.setUsername("admin_at");
+                                        newAdmin.setPassword(passwordEncoder.encode("admin123"));
+                                        newAdmin.setEmail("admin@algerietelecom.dz");
+                                        newAdmin.setRole(UserRole.ADMIN);
+                                        return userRepository.save(newAdmin);
+                                });
 
-        if (reservationRequestService.getMyRequests(admin).isEmpty()) {
+                UserEntity approver = userRepository.findByUsername("approver_at")
+                                .orElseGet(() -> {
+                                        UserEntity newApprover = new UserEntity();
+                                        newApprover.setUsername("approver_at");
+                                        newApprover.setPassword(passwordEncoder.encode("admin123"));
+                                        newApprover.setEmail("approver@algerietelecom.dz");
+                                        newApprover.setRole(UserRole.APPROVER);
+                                        return userRepository.save(newApprover);
+                                });
 
-            ReservationRequest request = ReservationRequest.builder()
-                    .requestNumber("REQ-2026-001")
-                    .missionType("FORMATION_TECHNIQUE")
-                    .status(ReservationStatus.PENDING)
-                    .createdBy(admin) 
-                    .destination("Oran - Direction Régionale")
-                    .departureDate(LocalDateTime.now().plusDays(7))
-                    .returnDate(LocalDateTime.now().plusDays(10))
-                    .reason("Formation sur les nouveaux équipements fibre optique")
-                    .build();
+                UserEntity agent = userRepository.findByUsername("agent_at")
+                                .orElseGet(() -> {
+                                        UserEntity newAgent = new UserEntity();
+                                        newAgent.setUsername("agent_at");
+                                        newAgent.setPassword(passwordEncoder.encode("admin123"));
+                                        newAgent.setEmail("agent@algerietelecom.dz");
+                                        newAgent.setRole(UserRole.AGENT);
+                                        return userRepository.save(newAgent);
+                                });
+                if (reservationRequestService.getMyRequests(agent).isEmpty()) {
 
-            ReservationParticipant p1 = ReservationParticipant.builder()
-                    .firstName("Mohamed").lastName("Fellah").employeeId("AT_12345")
-                    .role("Ingénieur SE").department("IT")
-                    .reservationRequest(request) 
-                    .build();
+                        ReservationRequest request = ReservationRequest.builder()
+                                        .requestNumber("REQ-2026-001")
+                                        .missionType("FORMATION_TECHNIQUE")
+                                        .status(ReservationStatus.PENDING)
+                                        .createdBy(agent)
+                                        .destination("Oran - Direction Régionale")
+                                        .departureDate(LocalDateTime.now().plusDays(7))
+                                        .returnDate(LocalDateTime.now().plusDays(10))
+                                        .reason("Formation sur les nouveaux équipements fibre optique")
+                                        .build();
 
-            ReservationParticipant p2 = ReservationParticipant.builder()
-                    .firstName("Amine").lastName("Telecom").employeeId("AT_67890")
-                    .role("Technicien").department("Réseaux")
-                    .reservationRequest(request)
-                    .build();
+                        ReservationParticipant p1 = ReservationParticipant.builder()
+                                        .firstName("Mohamed").lastName("Fellah").employeeId("AT_12345")
+                                        .role("Ingénieur SE").department("IT")
+                                        .reservationRequest(request)
+                                        .build();
 
-            request.setParticipants(Arrays.asList(p1, p2));
+                        ReservationParticipant p2 = ReservationParticipant.builder()
+                                        .firstName("Amine").lastName("Telecom").employeeId("AT_67890")
+                                        .role("Technicien").department("Réseaux")
+                                        .reservationRequest(request)
+                                        .build();
 
-            ReservationRequestPreference prefs = ReservationRequestPreference.builder()
-                    .flightPreference("Matin - Air Algérie")
-                    .hotelPreference("Hôtel 4 étoiles proche du site")
-                    .mealPreference("Standard")
-                    .transportType("AVION")
-                    .reservationRequest(request)
-                    .build();
+                        request.setParticipants(Arrays.asList(p1, p2));
 
-            request.setPreferences(prefs);
-            ReservationRequest saved = reservationRequestService.createRequest(request, admin);
+                        ReservationRequestPreference prefs = ReservationRequestPreference.builder()
+                                        .flightPreference("Matin - Air Algérie")
+                                        .hotelPreference("Hôtel 4 étoiles proche du site")
+                                        .mealPreference("Standard")
+                                        .transportType("AVION")
+                                        .reservationRequest(request)
+                                        .build();
 
-            System.out.println("✅ Réservation de test créée avec succès pour : " + admin.getUsername());
-            System.out.println("📍 Destination : " + saved.getDestination());
+                        request.setPreferences(prefs);
+                        ReservationRequest saved = reservationRequestService.createRequest(request, agent);
+
+                        System.out.println("Réservation de test créée avec succès pour : " + agent.getUsername());
+                        System.out.println(" Destination : " + saved.getDestination());
+                }
         }
-    }
 }

@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.UserEntity;
-import com.algerietelecom.logistics.reservationmanager.domain.enumeration.HistoryAction;
-import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest.HistoryAction;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest.ReservationStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

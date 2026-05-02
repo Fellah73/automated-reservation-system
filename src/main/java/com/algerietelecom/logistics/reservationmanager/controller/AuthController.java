@@ -31,9 +31,9 @@ public class AuthController {
     public ResponseEntity<ApiResponse<String>> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {
         try {
             UserEntity userEntity = authMapper.toEntity(loginDto);
-            String token = authService.login(userEntity);
+            String[] loginData = authService.login(userEntity);
 
-            Cookie cookie = new Cookie("authToken", token);
+            Cookie cookie = new Cookie("authToken", loginData[0]);
             cookie.setHttpOnly(true);
             cookie.setSecure(false);
             cookie.setPath("/");
@@ -45,7 +45,7 @@ public class AuthController {
                     .success(true)
                     .message("Login successful")
                     .statusCode(200)
-                    .data("Cookie set")
+                    .data(loginData[1])
                     .build();
 
             return ResponseEntity.ok(apiResponse);

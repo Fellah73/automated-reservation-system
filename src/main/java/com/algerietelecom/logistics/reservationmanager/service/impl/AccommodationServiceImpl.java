@@ -20,9 +20,9 @@ import com.algerietelecom.logistics.reservationmanager.domain.entities.auth.User
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.ProviderEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.provider.providerServices.AccommodationServiceEntity;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
-import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationStatus;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.AccommodationBooking.BookingStatus;
 import com.algerietelecom.logistics.reservationmanager.domain.enumeration.Provider.ProviderType;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest.ReservationStatus;
 import com.algerietelecom.logistics.reservationmanager.mappers.AccommodationBookingMapper;
 import com.algerietelecom.logistics.reservationmanager.repositories.accommodation.AccommodationBookingRepository;
 import com.algerietelecom.logistics.reservationmanager.repositories.provider.AccommodationServiceRepository;

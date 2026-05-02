@@ -2,7 +2,7 @@ package com.algerietelecom.logistics.reservationmanager.mappers;
 
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequest;
 import com.algerietelecom.logistics.reservationmanager.domain.entities.reservationRequest.ReservationRequestPreference;
-import com.algerietelecom.logistics.reservationmanager.domain.enumeration.HistoryAction;
+import com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest.HistoryAction;
 
 import tools.jackson.databind.ObjectMapper;
 

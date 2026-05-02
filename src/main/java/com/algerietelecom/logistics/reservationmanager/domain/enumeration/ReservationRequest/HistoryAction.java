@@ -1,4 +1,4 @@
-package com.algerietelecom.logistics.reservationmanager.domain.enumeration;
+package com.algerietelecom.logistics.reservationmanager.domain.enumeration.ReservationRequest;
 
 public enum HistoryAction {
     CREATION,

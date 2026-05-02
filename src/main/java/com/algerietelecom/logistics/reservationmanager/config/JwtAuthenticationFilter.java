@@ -51,7 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String email = jwtService.extractEmail(token);
 
                     UserEntity currentUser = userRepository.findAll().stream()
-                            .filter(u -> "admin".equals(u.getUsername()))
+                            .filter(u -> email.equals(u.getEmail()))
                             .findFirst()
                             .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'email : " + email));
 
